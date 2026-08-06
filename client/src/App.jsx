@@ -1,18 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
+import LandingPage from './components/LandingPage';
 import SummaryCards from './components/SummaryCards';
+import BudgetTracker from './components/BudgetTracker';
 import ChartsView from './components/ChartsView';
 import AIInsights from './components/AIInsights';
 import ExpenseTable from './components/ExpenseTable';
 import ExpenseForm from './components/ExpenseForm';
+import BillScanner from './components/BillScanner';
 import AuthModal from './components/AuthModal';
 import BudgetModal from './components/BudgetModal';
 import CSVImportModal from './components/CSVImportModal';
+
 import { api } from './services/api';
 import { CURRENCIES } from './utils/currencies';
 
 export default function App() {
+  const [activeView, setActiveView] = useState('dashboard'); // 'landing' | 'dashboard'
   const [user, setUser] = useState(null);
+
   const [currency, setCurrency] = useState(() => {
     const saved = localStorage.getItem('smart_expense_currency');
     if (saved) {
@@ -40,6 +46,7 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
 
   const handleCurrencyChange = (newCurrency) => {
@@ -117,6 +124,16 @@ export default function App() {
     }
   };
 
+  // Handle OCR Extracted Bill Import
+  const handleOCRImport = async (extractedData) => {
+    try {
+      await api.addExpense(extractedData);
+      await fetchData();
+    } catch (err) {
+      alert('Error importing scanned bill: ' + err.message);
+    }
+  };
+
   // Handle Delete Entry
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this transaction entry?')) return;
@@ -152,6 +169,7 @@ export default function App() {
     try {
       setLoading(true);
       await api.seedData();
+      setActiveView('dashboard');
       await fetchData();
     } catch (err) {
       alert('Failed to seed sample data: ' + err.message);
@@ -192,10 +210,13 @@ export default function App() {
         user={user}
         currency={currency}
         onCurrencyChange={handleCurrencyChange}
+        activeView={activeView}
+        onViewChange={setActiveView}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
         onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
         onOpenCSVModal={() => setIsCSVModalOpen(true)}
+        onOpenScannerModal={() => setIsScannerModalOpen(true)}
         onOpenAddModal={handleOpenAddModal}
         onSeedData={handleSeedData}
         onClearData={handleClearData}
@@ -203,65 +224,87 @@ export default function App() {
         loading={loading}
       />
 
-      {/* Main Container */}
-      <main style={{
-        maxWidth: '1280px',
-        width: '100%',
-        margin: '0 auto',
-        padding: '24px',
-        flex: 1
-      }}>
-        {error && (
-          <div style={{
-            background: 'rgba(244, 63, 94, 0.15)',
-            border: '1px solid rgba(244, 63, 94, 0.4)',
-            color: '#fda4af',
-            padding: '14px 18px',
-            borderRadius: '12px',
-            fontSize: '0.88rem',
-            marginBottom: '24px'
-          }}>
-            {error}
-          </div>
-        )}
-
-        {/* Dashboard Top Summary Metrics & Budget Progress */}
-        <SummaryCards 
-          summary={summary} 
-          healthScore={aiInsights ? aiInsights.healthScore : null}
-          currencySymbol={currency.symbol}
+      {/* View Switcher: Public Landing Page vs App Dashboard */}
+      {activeView === 'landing' ? (
+        <LandingPage
+          onLaunchDashboard={() => setActiveView('dashboard')}
+          onSeedDemoData={handleSeedData}
         />
+      ) : (
+        <main style={{
+          maxWidth: '1280px',
+          width: '100%',
+          margin: '0 auto',
+          padding: '24px',
+          flex: 1
+        }}>
+          {error && (
+            <div style={{
+              background: 'rgba(244, 63, 94, 0.15)',
+              border: '1px solid rgba(244, 63, 94, 0.4)',
+              color: '#fda4af',
+              padding: '14px 18px',
+              borderRadius: '12px',
+              fontSize: '0.88rem',
+              marginBottom: '24px'
+            }}>
+              {error}
+            </div>
+          )}
 
-        {/* AI Insights & Pattern Report Section */}
-        <AIInsights 
-          onGenerate={handleGenerateAI}
-          insights={aiInsights}
-          loading={aiLoading}
-          error={error}
-        />
+          {/* Dashboard Summary Metrics Cards */}
+          <SummaryCards 
+            summary={summary} 
+            healthScore={aiInsights ? aiInsights.healthScore : null}
+            currencySymbol={currency.symbol}
+          />
 
-        {/* Interactive Charts Dashboard */}
-        <ChartsView expenses={expenses} />
+          {/* Category Budget Tracker & Progress Bars */}
+          <BudgetTracker
+            budgetComparison={summary.budgetComparison || []}
+            onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+            currencySymbol={currency.symbol}
+          />
 
-        {/* Financial Transactions Log Table */}
-        <ExpenseTable 
-          expenses={expenses}
-          onEdit={handleOpenEditModal}
-          onDelete={handleDelete}
-          selectedCategory={categoryFilter}
-          onCategoryChange={setCategoryFilter}
-          search={searchQuery}
-          onSearchChange={setSearchQuery}
-          currencySymbol={currency.symbol}
-        />
-      </main>
+          {/* AI Insights & Pattern Analysis Engine */}
+          <AIInsights 
+            onGenerate={handleGenerateAI}
+            insights={aiInsights}
+            loading={aiLoading}
+            error={error}
+          />
 
-      {/* Manual Entry & Receipt OCR Modal */}
+          {/* Interactive Recharts Analytics */}
+          <ChartsView expenses={expenses} />
+
+          {/* Financial Transactions Log Table */}
+          <ExpenseTable 
+            expenses={expenses}
+            onEdit={handleOpenEditModal}
+            onDelete={handleDelete}
+            selectedCategory={categoryFilter}
+            onCategoryChange={setCategoryFilter}
+            search={searchQuery}
+            onSearchChange={setSearchQuery}
+            currencySymbol={currency.symbol}
+          />
+        </main>
+      )}
+
+      {/* Manual Entry & Photo Receipt Modal */}
       <ExpenseForm 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleFormSubmit}
         initialData={editingExpense}
+        currencySymbol={currency.symbol}
+      />
+
+      {/* AI Bill Scanner Modal */}
+      <BillScanner
+        isOpen={isScannerModalOpen}
+        onClose={() => setIsScannerModalOpen(false)}
+        onImportExtracted={handleOCRImport}
         currencySymbol={currency.symbol}
       />
 
@@ -296,7 +339,7 @@ export default function App() {
         fontSize: '0.8rem',
         marginTop: 'auto'
       }}>
-        Smart Expense AI &bull; Global Multi-Currency Financial Tracker & AI Insights Engine
+        Smart Expense AI &bull; Free AI Powered Expense Tracker &bull; NPR, CAD, USD, EUR, GBP, INR & 150+ Currencies
       </footer>
     </div>
   );
