@@ -268,6 +268,13 @@ export default function App() {
             summary={summary || {}} 
             healthScore={aiInsights ? aiInsights.healthScore : null}
             currencySymbol={currencySymbol}
+            user={user}
+            onSeedData={handleSeedData}
+            onClearData={handleClearData}
+            onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+            onOpenCSVModal={() => setIsCSVModalOpen(true)}
+            onOpenScannerModal={() => setIsScannerModalOpen(true)}
+            loading={loading}
           />
 
           {/* Category Budget Tracker & Progress Bars */}
