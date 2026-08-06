@@ -39,16 +39,32 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+import fs from 'fs';
+
 // Serve Static Frontend Bundle from client/dist if built
 const clientDistPath = path.join(__dirname, '../client/dist');
-app.use(express.static(clientDistPath));
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+}
 
-// Fallback to index.html for single-page React app routing
+// Fallback to index.html for single-page React app routing or API Landing Page
 app.get('*', (req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ success: false, error: 'API Endpoint Not Found' });
   }
-  res.sendFile(path.join(clientDistPath, 'index.html'));
+  const indexPath = path.join(clientDistPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    return res.sendFile(indexPath);
+  }
+  res.json({
+    status: 'ok',
+    message: '🚀 Smart Expense Tracker API Backend Server is Running Live!',
+    health: '/api/health',
+    documentation: {
+      expenses: '/api/expenses',
+      insights: '/api/insights/generate'
+    }
+  });
 });
 
 // Start Production Server
