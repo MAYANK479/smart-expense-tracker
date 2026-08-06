@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from './components/Navbar';
 import LandingPage from './components/LandingPage';
 import SummaryCards from './components/SummaryCards';
@@ -241,76 +242,93 @@ export default function App() {
       />
 
       {/* View Switcher: Public Landing Page vs App Dashboard */}
-      {activeView === 'landing' ? (
-        <LandingPage
-          onLaunchDashboard={() => setActiveView('dashboard')}
-          onSeedDemoData={handleSeedData}
-        />
-      ) : (
-        <div className="max-w-7xl w-full mx-auto px-4 py-6 flex flex-col md:flex-row gap-6 flex-1">
-          {/* Floating Collapsible Sidebar */}
-          <Sidebar
-            activeTab={sidebarTab}
-            onTabChange={setSidebarTab}
-            onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-            onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
-            isPostgresConnected={summary.isPostgresConnected || false}
-          />
-
-          {/* Dashboard Main Content Area */}
-          <main className="flex-1 min-w-0 space-y-6">
-            {error && (
-              <div className="bg-rose-500/15 border border-rose-500/40 text-rose-300 p-4 rounded-2xl text-xs font-semibold">
-                {error}
-              </div>
-            )}
-
-            {/* Dashboard Summary Metrics Cards */}
-            <SummaryCards 
-              summary={summary || {}} 
-              healthScore={aiInsights ? aiInsights.healthScore : null}
-              currencySymbol={currencySymbol}
-              user={user}
-              onSeedData={handleSeedData}
-              onClearData={handleClearData}
+      <AnimatePresence mode="wait">
+        {activeView === 'landing' ? (
+          <motion.div
+            key="landing"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25 }}
+          >
+            <LandingPage
+              onLaunchDashboard={() => setActiveView('dashboard')}
+              onSeedDemoData={handleSeedData}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.25 }}
+            className="max-w-7xl w-full mx-auto px-4 py-6 flex flex-col md:flex-row gap-6 flex-1"
+          >
+            {/* Floating Collapsible Sidebar */}
+            <Sidebar
+              activeTab={sidebarTab}
+              onTabChange={setSidebarTab}
               onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-              onOpenCSVModal={() => setIsCSVModalOpen(true)}
-              onOpenScannerModal={() => setIsScannerModalOpen(true)}
-              loading={loading}
+              onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+              isPostgresConnected={summary.isPostgresConnected || false}
             />
 
-            {/* Category Budget Tracker & Progress Bars */}
-            <BudgetTracker
-              budgetComparison={(summary && summary.budgetComparison) || []}
-              onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-              currencySymbol={currencySymbol}
-            />
+            {/* Dashboard Main Content Area */}
+            <main className="flex-1 min-w-0 space-y-6">
+              {error && (
+                <div className="bg-rose-500/15 border border-rose-500/40 text-rose-300 p-4 rounded-2xl text-xs font-semibold">
+                  {error}
+                </div>
+              )}
 
-            {/* AI Insights & Pattern Analysis Engine */}
-            <AIInsights 
-              onGenerate={handleGenerateAI}
-              insights={aiInsights}
-              loading={aiLoading}
-              error={error}
-            />
+              {/* Dashboard Summary Metrics Cards */}
+              <SummaryCards 
+                summary={summary || {}} 
+                healthScore={aiInsights ? aiInsights.healthScore : null}
+                currencySymbol={currencySymbol}
+                user={user}
+                onSeedData={handleSeedData}
+                onClearData={handleClearData}
+                onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+                onOpenCSVModal={() => setIsCSVModalOpen(true)}
+                onOpenScannerModal={() => setIsScannerModalOpen(true)}
+                loading={loading}
+              />
 
-            {/* Interactive Recharts Analytics */}
-            <ChartsView expenses={expenses || []} currencySymbol={currencySymbol} />
+              {/* Category Budget Tracker & Progress Bars */}
+              <BudgetTracker
+                budgetComparison={(summary && summary.budgetComparison) || []}
+                onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+                currencySymbol={currencySymbol}
+              />
 
-            {/* Financial Transactions Log Table */}
-            <ExpenseTable 
-              expenses={expenses || []}
-              onEdit={handleOpenEditModal}
-              onDelete={handleDelete}
-              selectedCategory={categoryFilter}
-              onCategoryChange={setCategoryFilter}
-              search={searchQuery}
-              onSearchChange={setSearchQuery}
-              currencySymbol={currencySymbol}
-            />
-          </main>
-        </div>
-      )}
+              {/* AI Insights & Pattern Analysis Engine */}
+              <AIInsights 
+                onGenerate={handleGenerateAI}
+                insights={aiInsights}
+                loading={aiLoading}
+                error={error}
+              />
+
+              {/* Interactive Recharts Analytics */}
+              <ChartsView expenses={expenses || []} currencySymbol={currencySymbol} />
+
+              {/* Financial Transactions Log Table */}
+              <ExpenseTable 
+                expenses={expenses || []}
+                onEdit={handleOpenEditModal}
+                onDelete={handleDelete}
+                selectedCategory={categoryFilter}
+                onCategoryChange={setCategoryFilter}
+                search={searchQuery}
+                onSearchChange={setSearchQuery}
+                currencySymbol={currencySymbol}
+              />
+            </main>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Manual Entry & Photo Receipt Modal */}
       <ExpenseForm 
