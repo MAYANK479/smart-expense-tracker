@@ -9,7 +9,13 @@ export const CURRENCIES = [
   { code: 'JPY', symbol: '¥', name: 'JPY (¥)' }
 ];
 
-export function formatCurrency(amount, currencySymbol = '$') {
+export function formatCurrency(amount, currency = '$') {
   const num = parseFloat(amount) || 0;
-  return `${currencySymbol}${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  let symbol = '$';
+  if (typeof currency === 'string') {
+    symbol = currency;
+  } else if (currency && typeof currency === 'object') {
+    symbol = currency.symbol || '$';
+  }
+  return `${symbol}${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
