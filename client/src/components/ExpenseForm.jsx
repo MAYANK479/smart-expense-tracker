@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, PlusCircle, CheckCircle, Camera, Sparkles, Loader2, AlertCircle, ArrowUpRight, TrendingDown } from 'lucide-react';
+import Button from './ui/Button';
+import Input from './ui/Input';
+import Card from './ui/Card';
 import { api } from '../services/api';
 
 const EXPENSE_CATEGORIES = [
@@ -92,7 +96,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
 
     setScanning(true);
     setError('');
-    setScanMessage('Analyzing receipt with AI Vision...');
+    setScanMessage('Analyzing receipt image with AI Vision...');
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -143,219 +147,175 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0, 0, 0, 0.75)',
-      backdropFilter: 'blur(8px)',
-      zIndex: 100,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px'
-    }}>
-      <div className="glass-card animate-fade-in" style={{
-        width: '100%',
-        maxWidth: '540px',
-        background: '#0F172A',
-        border: '1px solid rgba(99, 102, 241, 0.3)',
-        padding: '28px',
-        position: 'relative'
-      }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PlusCircle size={20} color="#6366F1" />
-            {initialData ? 'Edit Transaction Entry' : 'Log New Transaction'}
-          </h2>
-          <button 
-            onClick={onClose} 
-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px' }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* TYPE TOGGLE: EXPENSE VS INCOME */}
-        <div className="grid grid-cols-2 gap-2 mb-4 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
-          <button
-            type="button"
-            onClick={() => handleTypeChange('expense')}
-            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-              formData.type === 'expense'
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <TrendingDown className="w-3.5 h-3.5" />
-            <span>Expense (Outflow)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleTypeChange('income')}
-            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-              formData.type === 'income'
-                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>Income (Inflow)</span>
-          </button>
-        </div>
-
-        {/* AI RECEIPT OCR SCANNER DROPZONE (for expenses) */}
-        {!initialData && formData.type === 'expense' && (
-          <div className="mb-4 bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-3.5 flex items-center justify-between text-xs text-indigo-200">
-            <div className="flex items-center gap-2.5">
-              <Camera className="w-4 h-4 text-indigo-400 shrink-0" />
-              <div>
-                <span className="font-semibold text-slate-100 flex items-center gap-1">
-                  Scan Receipt Image <Sparkles className="w-3 h-3 text-indigo-400" />
-                </span>
-                <p className="text-[11px] text-slate-400">Upload a photo to auto-fill merchant, price, date & category</p>
+    <AnimatePresence>
+      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+          className="w-full max-w-lg bg-slate-950 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+                <PlusCircle className="w-5 h-5" />
               </div>
+              <h3 className="font-extrabold text-lg text-white">
+                {initialData ? 'Edit Transaction Entry' : 'Log Transaction'}
+              </h3>
             </div>
-            <label className="btn btn-secondary text-xs py-1.5 px-3 cursor-pointer shrink-0 flex items-center gap-1.5">
-              {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
-              <span>{scanning ? 'Scanning...' : 'Scan Image'}</span>
-              <input type="file" accept="image/*" onChange={handleReceiptUpload} disabled={scanning} className="hidden" />
-            </label>
+            <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg">
+              <X className="w-5 h-5" />
+            </button>
           </div>
-        )}
 
-        {scanMessage && (
-          <div className="alert-banner alert-banner-success text-xs mb-3 flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{scanMessage}</span>
+          {/* TYPE TOGGLE: EXPENSE VS INCOME */}
+          <div className="grid grid-cols-2 gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800">
+            <button
+              type="button"
+              onClick={() => handleTypeChange('expense')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                formData.type === 'expense'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <TrendingDown className="w-3.5 h-3.5" />
+              <span>Expense (Outflow)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTypeChange('income')}
+              className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                formData.type === 'income'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>Income (Inflow)</span>
+            </button>
           </div>
-        )}
 
-        {error && (
-          <div className="alert-banner alert-banner-danger text-xs mb-3 flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
+          {/* AI RECEIPT OCR SCANNER DROPZONE */}
+          {!initialData && formData.type === 'expense' && (
+            <div className="bg-purple-950/40 border border-purple-500/30 rounded-2xl p-3.5 flex items-center justify-between text-xs text-purple-200">
+              <div className="flex items-center gap-2.5">
+                <Camera className="w-4 h-4 text-purple-400 shrink-0" />
+                <div>
+                  <span className="font-semibold text-slate-100 flex items-center gap-1">
+                    Scan Receipt Image <Sparkles className="w-3 h-3 text-purple-400" />
+                  </span>
+                  <p className="text-[11px] text-slate-400">Auto-fill merchant, price, date & category</p>
+                </div>
+              </div>
+              <label className="btn-secondary text-xs py-1.5 px-3 cursor-pointer shrink-0 flex items-center gap-1.5">
+                {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+                <span>{scanning ? 'Scanning...' : 'Scan Image'}</span>
+                <input type="file" accept="image/*" onChange={handleReceiptUpload} disabled={scanning} className="hidden" />
+              </label>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit}>
-          {/* Title */}
-          <div style={{ marginBottom: '16px' }}>
-            <label className="input-label">{formData.type === 'income' ? 'Income Source / Title *' : 'Expense Title / Merchant *'}</label>
-            <input 
-              type="text"
-              className="input-field"
-              placeholder={formData.type === 'income' ? 'e.g. Monthly Salary, Freelance Client, Dividend' : 'e.g. Whole Foods Market, Netflix, Uber'}
+          {scanMessage && (
+            <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl text-xs text-emerald-300 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>{scanMessage}</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-xs text-rose-300 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              label={formData.type === 'income' ? 'Income Title *' : 'Expense / Merchant *'}
+              placeholder={formData.type === 'income' ? 'e.g. Monthly Salary, Freelance Client' : 'e.g. Whole Foods, Netflix, Uber'}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
             />
-          </div>
 
-          {/* Amount & Date Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-            <div>
-              <label className="input-label">Amount ({currencySymbol}) *</label>
-              <input 
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                label={`Amount (${currencySymbol}) *`}
                 type="number"
                 step="0.01"
                 min="0.01"
-                className="input-field"
                 placeholder="0.00"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 required
               />
-            </div>
 
-            <div>
-              <label className="input-label">Date *</label>
-              <input 
+              <Input
+                label="Date *"
                 type="date"
-                className="input-field"
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 required
               />
             </div>
-          </div>
 
-          {/* Category & Payment Method Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
-            <div>
-              <label className="input-label">Category *</label>
-              <select 
-                className="input-field"
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              >
-                {currentCategories.map(cat => (
-                  <option key={cat} value={cat} style={{ background: '#0F172A', color: '#fff' }}>{cat}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Category *</label>
+                <select
+                  className="input-primary"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  {currentCategories.map(cat => (
+                    <option key={cat} value={cat} style={{ background: '#0F172A', color: '#fff' }}>{cat}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Payment Method</label>
+                <select
+                  className="input-primary"
+                  value={formData.payment_method}
+                  onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                >
+                  {PAYMENT_METHODS.map(pm => (
+                    <option key={pm} value={pm} style={{ background: '#0F172A', color: '#fff' }}>{pm}</option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div>
-              <label className="input-label">Payment Method</label>
-              <select 
-                className="input-field"
-                value={formData.payment_method}
-                onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-              >
-                {PAYMENT_METHODS.map(pm => (
-                  <option key={pm} value={pm} style={{ background: '#0F172A', color: '#fff' }}>{pm}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div style={{ marginBottom: '16px' }}>
-            <label className="input-label">Notes / Description (Optional)</label>
-            <input 
-              type="text"
-              className="input-field"
-              placeholder="e.g. Payroll direct deposit, Family groceries"
+            <Input
+              label="Notes (Optional)"
+              placeholder="e.g. Payroll direct deposit"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             />
-          </div>
 
-          {/* Tags */}
-          <div style={{ marginBottom: '24px' }}>
-            <label className="input-label">Tags (Comma separated)</label>
-            <input 
-              type="text"
-              className="input-field"
-              placeholder="e.g. essential, recurring, work, leisure"
+            <Input
+              label="Tags (Comma separated)"
+              placeholder="e.g. essential, recurring, work"
               value={formData.tags}
               onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
             />
-          </div>
 
-          {/* Action Buttons */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-            <button 
-              type="button" 
-              onClick={onClose} 
-              className="glow-btn glow-btn-secondary"
-            >
-              Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="glow-btn"
-            >
-              <CheckCircle size={16} />
-              {initialData ? 'Save Changes' : 'Save Transaction'}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="secondary" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit" icon={CheckCircle}>
+                {initialData ? 'Save Changes' : 'Save Transaction'}
+              </Button>
+            </div>
+          </form>
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }
