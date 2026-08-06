@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Search, Filter, ArrowUpDown, Edit3, Trash2, Tag, Calendar, CreditCard, DollarSign 
+  Search, ArrowUpDown, Edit3, Trash2, Calendar, CreditCard, Download
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -44,6 +44,34 @@ export default function ExpenseTable({ expenses = [], onEdit, onDelete, selected
     return 0;
   });
 
+  const exportToCSV = () => {
+    if (sortedExpenses.length === 0) return;
+    const headers = ['Date', 'Title / Merchant', 'Category', 'Amount', 'Payment Method', 'Notes', 'Tags'];
+    const csvRows = [headers.join(',')];
+
+    sortedExpenses.forEach(exp => {
+      const row = [
+        `"${exp.date || ''}"`,
+        `"${(exp.title || '').replace(/"/g, '""')}"`,
+        `"${exp.category || ''}"`,
+        parseFloat(exp.amount || 0).toFixed(2),
+        `"${exp.payment_method || 'Card'}"`,
+        `"${(exp.notes || '').replace(/"/g, '""')}"`,
+        `"${(exp.tags || '').replace(/"/g, '""')}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `expense_report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="glass-card animate-fade-in" style={{ padding: '24px' }}>
       {/* Table Header & Controls */}
@@ -53,13 +81,24 @@ export default function ExpenseTable({ expenses = [], onEdit, onDelete, selected
             Expense Transactions Log
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Showing {sortedExpenses.length} manual expense entries
+            Showing {sortedExpenses.length} manual & imported entries
           </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* Export CSV Button */}
+          <button
+            onClick={exportToCSV}
+            disabled={sortedExpenses.length === 0}
+            className="glow-btn glow-btn-secondary text-xs"
+            title="Download CSV report"
+          >
+            <Download size={14} />
+            Export CSV
+          </button>
+
           {/* Search Box */}
-          <div style={{ position: 'relative', minWidth: '200px' }}>
+          <div style={{ position: 'relative', minWidth: '180px' }}>
             <Search size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
             <input 
               type="text"

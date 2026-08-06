@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, PlusCircle, CheckCircle, DollarSign, Calendar, Tag, CreditCard, FileText } from 'lucide-react';
+import { X, PlusCircle, CheckCircle, Camera, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { api } from '../services/api';
 
 const CATEGORIES = [
   'Food & Dining',
@@ -33,6 +34,8 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
   });
 
   const [error, setError] = useState('');
+  const [scanning, setScanning] = useState(false);
+  const [scanMessage, setScanMessage] = useState('');
 
   useEffect(() => {
     if (initialData) {
@@ -57,9 +60,46 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
       });
     }
     setError('');
+    setScanMessage('');
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
+
+  const handleReceiptUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setScanning(true);
+    setError('');
+    setScanMessage('Analyzing receipt with AI Vision...');
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const base64 = event.target.result;
+        const res = await api.scanReceipt(base64, file.type);
+        setScanning(false);
+
+        if (res.data) {
+          const { title, amount, category, date, payment_method, notes, extractionReasoning } = res.data;
+          setFormData(prev => ({
+            ...prev,
+            title: title || prev.title,
+            amount: amount ? amount.toString() : prev.amount,
+            category: CATEGORIES.includes(category) ? category : prev.category,
+            date: date || prev.date,
+            payment_method: PAYMENT_METHODS.includes(payment_method) ? payment_method : prev.payment_method,
+            notes: notes || extractionReasoning || 'Scanned via AI Vision'
+          }));
+          setScanMessage(`✨ Successfully extracted: ${title} ($${amount})`);
+        }
+      } catch (err) {
+        setScanning(false);
+        setError(err.message || 'Failed to scan receipt image.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -97,7 +137,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
     }}>
       <div className="glass-card animate-fade-in" style={{
         width: '100%',
-        maxWidth: '520px',
+        maxWidth: '540px',
         background: '#0F172A',
         border: '1px solid rgba(99, 102, 241, 0.3)',
         padding: '28px',
@@ -107,7 +147,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <PlusCircle size={20} color="#6366F1" />
-            {initialData ? 'Edit Expense Entry' : 'Manual Expense Entry'}
+            {initialData ? 'Edit Expense Entry' : 'Expense Transaction Entry'}
           </h2>
           <button 
             onClick={onClose} 
@@ -117,17 +157,37 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
           </button>
         </div>
 
+        {/* AI RECEIPT OCR SCANNER DROPZONE */}
+        {!initialData && (
+          <div className="mb-4 bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-3.5 flex items-center justify-between text-xs text-indigo-200">
+            <div className="flex items-center gap-2.5">
+              <Camera className="w-4 h-4 text-indigo-400 shrink-0" />
+              <div>
+                <span className="font-semibold text-slate-100 flex items-center gap-1">
+                  Scan Receipt Image <Sparkles className="w-3 h-3 text-indigo-400" />
+                </span>
+                <p className="text-[11px] text-slate-400">Upload a photo to auto-fill merchant, price, date & category</p>
+              </div>
+            </div>
+            <label className="btn btn-secondary text-xs py-1.5 px-3 cursor-pointer shrink-0 flex items-center gap-1.5">
+              {scanning ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Camera className="w-3.5 h-3.5" />}
+              <span>{scanning ? 'Scanning...' : 'Scan Image'}</span>
+              <input type="file" accept="image/*" onChange={handleReceiptUpload} disabled={scanning} className="hidden" />
+            </label>
+          </div>
+        )}
+
+        {scanMessage && (
+          <div className="alert-banner alert-banner-success text-xs mb-3 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{scanMessage}</span>
+          </div>
+        )}
+
         {error && (
-          <div style={{
-            background: 'rgba(244, 63, 94, 0.15)',
-            border: '1px solid rgba(244, 63, 94, 0.4)',
-            color: '#fda4af',
-            padding: '10px 14px',
-            borderRadius: '8px',
-            fontSize: '0.85rem',
-            marginBottom: '16px'
-          }}>
-            {error}
+          <div className="alert-banner alert-banner-danger text-xs mb-3 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -149,18 +209,16 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
             <div>
               <label className="input-label">Amount ($) *</label>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  className="input-field"
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  required
-                />
-              </div>
+              <input 
+                type="number"
+                step="0.01"
+                min="0.01"
+                className="input-field"
+                placeholder="0.00"
+                value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                required
+              />
             </div>
 
             <div>

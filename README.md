@@ -1,154 +1,157 @@
-# 💡 Smart Expense Tracker & AI Pattern Insight Engine
+# 🏆 Smart Expense Tracker & AI Pattern Insight Engine
 
+[![Tests](https://img.shields.io/badge/Tests-8%20Passed-10B981?logo=jest)](https://github.com/MAYANK479/smart-expense-tracker)
+[![Security](https://img.shields.io/badge/Security-Helmet%20%2B%20Rate%20Limited-6366F1?logo=express)](https://github.com/MAYANK479/smart-expense-tracker)
 [![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?logo=react)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?logo=node.js)](https://nodejs.org/)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-4169E1?logo=postgresql)](https://www.postgresql.org/)
-[![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini%20%2F%20Groq-4285F4?logo=google-gemini)](https://ai.google.dev/)
+[![AI Engine](https://img.shields.io/badge/AI-Gemini%20%2F%20Groq%20Vision-4285F4?logo=google-gemini)](https://ai.google.dev/)
 [![Vercel](https://img.shields.io/badge/Deploy-Vercel-000000?logo=vercel)](https://smart-expense-tracker-sable.vercel.app)
 [![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render)](https://smart-expense-tracker-api-nax2.onrender.com)
 
-An intelligent, full-stack financial tracking web application built with **React**, **Vite**, **Express**, **PostgreSQL**, and **Google Gemini AI**. Tracks your daily transactions, categorizes outlays, visualizes spending velocity with dynamic Recharts analytics, and leverages AI LLMs for automated financial health scoring, anomaly detection, and actionable savings tips.
+An enterprise-grade, full-stack financial management platform designed to solve real-world personal expense tracking with **React 18**, **Express**, **PostgreSQL**, **JWT Authentication**, and **AI Vision OCR**. 
+
+Built with production security standards (`helmet`, `express-rate-limit`, input validation, centralized error handling), automated test coverage with Jest/Supertest, monthly budget target alerts, CSV bank statement bulk importing, and instant AI receipt OCR scanning.
 
 ---
 
-## 🔗 Live Links
+## 🌐 Live Production Deployments
 
-* 🌐 **Live Web Application (Vercel)**: [https://smart-expense-tracker-sable.vercel.app](https://smart-expense-tracker-sable.vercel.app)
+* 📱 **Web Application (Vercel)**: [https://smart-expense-tracker-sable.vercel.app](https://smart-expense-tracker-sable.vercel.app)
 * ⚡ **Backend REST API (Render)**: [https://smart-expense-tracker-api-nax2.onrender.com](https://smart-expense-tracker-api-nax2.onrender.com)
 * 📦 **GitHub Repository**: [https://github.com/MAYANK479/smart-expense-tracker](https://github.com/MAYANK479/smart-expense-tracker)
 
 ---
 
-## ✨ Features
+## 🏗️ System Architecture & Data Flow
 
-- **💸 Full-Stack Expense Management**: Add, update, delete, search, and filter expenses by category, date range, or keywords.
-- **🤖 AI Financial Insights Engine**: Integrates Google Gemini (`gemini-2.5-flash` / `gemini-1.5-flash`), Groq AI (Llama 3.3 70B), or OpenAI to generate personalized spending advice, financial health scores, and anomaly warnings.
-- **📊 Dynamic Visual Analytics**: Interactive Recharts components including category pie charts, monthly proportion distribution, and daily spending velocity bar graphs.
-- **🛡️ Dual Database Storage Architecture**: 
-  - Connects directly to **PostgreSQL** when database environment variables (`DATABASE_URL`) are provided.
-  - Features an **Automatic Resilient In-Memory Fallback Storage Engine** if database connection is unavailable.
-- **🎨 Glassmorphic Dark UI**: Custom dark-mode aesthetic with CSS micro-animations, toast alerts, confetti celebrations, and responsive mobile-first layouts.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as User / Browser
+    participant React as React Frontend (Vercel)
+    participant Express as Express API Server (Render)
+    participant RateLimiter as Security & Rate Limiter
+    participant DB as PostgreSQL Database
+    participant AI as AI Engine (Gemini / Groq / OpenAI)
 
----
-
-## 🛠️ Technology Stack
-
-### **Frontend (`/client`)**
-* **Framework**: React 18 + Vite
-* **UI Icons & Animations**: `lucide-react`, `canvas-confetti`
-* **Data Visualization**: `recharts`
-* **HTTP Client**: Native Fetch API with environment variable routing
-
-### **Backend (`/server`)**
-* **Runtime**: Node.js (ES Modules)
-* **Framework**: Express.js
-* **Database Driver**: `pg` (PostgreSQL Client with SSL cloud database support)
-* **AI Integrations**: `@google/generative-ai`, `openai` (Groq & OpenAI support)
-
----
-
-## 📁 Repository Structure
-
-```text
-smart-expense-tracker/
-├── client/                     # React + Vite Frontend
-│   ├── src/
-│   │   ├── components/         # Navbar, SummaryCards, ExpenseForm, ExpenseTable, ChartsView, AIInsights
-│   │   ├── services/           # API fetch client (VITE_API_URL configured)
-│   │   ├── App.jsx             # Main Application Container & Tab State
-│   │   └── index.css           # Global Theme & Glassmorphic Styling
-│   ├── package.json
-│   └── vercel.json             # Vercel Single-Page Application Rewrites
-│
-├── server/                     # Node.js + Express Backend API
-│   ├── db/                     # PostgreSQL pool & resilient memory fallback store
-│   ├── routes/                 # Express API routes (/api/expenses, /api/insights)
-│   ├── services/               # AI Engine (Gemini, Groq, OpenAI & Heuristic Engine)
-│   ├── schema.sql              # PostgreSQL DDL Table Definitions
-│   ├── index.js                # Express Server Entrypoint
-│   └── package.json
-│
-├── package.json                # Monorepo root scripts
-├── render.yaml                 # Infrastructure-as-code blueprint for Render
-└── README.md
+    User->>React: Submit Transaction / Upload Receipt
+    React->>RateLimiter: HTTP Request + Bearer JWT Token
+    RateLimiter->>Express: Sanitize & Validate Payload
+    alt Database Connection Active
+        Express->>DB: Query / Insert Record
+        DB-->>Express: Return User Rows
+    else Database Connection Unavailable
+        Express->>Express: Execute Resilient Fallback Engine
+    end
+    opt AI Analysis / Receipt OCR Triggered
+        Express->>AI: Send Vision Prompt / Aggregated Data
+        AI-->>Express: Return Structured JSON Insights
+    end
+    Express-->>React: Return JSON Response
+    React-->>User: Update Recharts & Budget Alerts
 ```
 
 ---
 
-## ⚙️ Environment Variables
+## ⭐ Core Enterprise Features
 
-### Backend (`server/.env`)
+### 🔐 1. Authentication & Multi-Tenant Data Isolation
+- JWT-based authentication (`bcryptjs` password hashing with 10 salt rounds).
+- Per-user data partitioning across expenses, budgets, and AI reports.
+- Seamless **Guest Mode** fallback allowing instant exploration without upfront sign-up.
 
-Create a `.env` file inside the `server/` directory:
+### 📷 2. AI Receipt OCR Image Scanner (Standout Feature)
+- Drag-and-drop receipt image scanner powered by **Gemini Vision AI** & **Groq Llama 3.3 70B**.
+- Automatically extracts merchant name, transaction total amount, category, date, and payment method into the expense form.
 
-```env
-# Server Port
-PORT=5001
+### 🎯 3. Monthly Budgets & Overspend Threshold Alerts
+- Set monthly budget limits per expense category.
+- Real-time progress bars, budget usage percentages, and automated overspend alert banners when reaching 80%+ of category limits.
 
-# AI Credentials (Google Gemini or Groq or OpenAI)
-GEMINI_API_KEY=your_gemini_api_key_here
-OPENAI_API_KEY=your_openai_api_key_here
+### 📁 4. CSV Export & Bank Statement Bulk Import
+- **CSV Bank Statement Importer**: Parse CSV bank export files, map headers, preview transactions, and bulk upload into database.
+- **Report Export**: 1-click download of expense logs formatted as clean `.csv` reports.
 
-# PostgreSQL Database (Optional - App includes built-in fallback)
-DATABASE_URL=postgresql://postgres:password@localhost:5432/expense_tracker
-```
-
-### Frontend (`client/.env`)
-
-```env
-VITE_API_URL=https://smart-expense-tracker-api-nax2.onrender.com
-```
-
----
-
-## 🚀 Local Development Setup
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/MAYANK479/smart-expense-tracker.git
-   cd smart-expense-tracker
-   ```
-
-2. **Install all dependencies**:
-   ```bash
-   npm run postinstall
-   ```
-
-3. **Run Development Servers**:
-   - Backend API (`http://localhost:5001`):
-     ```bash
-     npm run dev:server
-     ```
-   - Frontend UI (`http://localhost:5173`):
-     ```bash
-     npm run dev:client
-     ```
+### 🛡️ 5. Security & Production Reliability
+- **Security Headers**: `helmet` header protection against XSS, clickjacking, and MIME sniffing.
+- **Rate Limiting**: `express-rate-limit` protecting AI endpoints against API quota exhaustion (20 req / 15 min) and brute-force mitigation on auth endpoints.
+- **Central Error Handler**: Express error middleware preventing leak of internal stack traces in production.
 
 ---
 
-## 📡 API Endpoints Summary
+## 🧪 Automated Testing Suite
 
-| Method | Endpoint | Description |
+The repository includes a Supertest & Jest integration test suite covering API contracts, authentication workflows, validation constraints, and budget endpoints.
+
+Run the test suite locally:
+
+```bash
+npm test
+```
+
+### Test Coverage Highlights:
+- ✅ `GET /api/health` status check
+- ✅ `POST /api/auth/register` user creation & token generation
+- ✅ `POST /api/auth/login` password verification & session check
+- ✅ `GET /api/auth/me` user profile authentication
+- ✅ `GET /api/expenses` dataset listing
+- ✅ `POST /api/expenses` valid transaction creation
+- ✅ `POST /api/expenses` rejection of invalid/negative amounts (HTTP 400)
+- ✅ `POST /api/budgets` budget target limit persistence
+
+---
+
+## 📊 Technical Tradeoffs & Architectural Decisions
+
+| Decision | Choice | Rationale & Tradeoff |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Healthcheck & AI service status |
-| `GET` | `/api/expenses` | Fetch expenses (supports `category`, `search`, `startDate`, `endDate`, `sortBy`) |
-| `POST` | `/api/expenses` | Add a new expense transaction |
-| `PUT` | `/api/expenses/:id` | Update an existing transaction |
-| `DELETE` | `/api/expenses/:id` | Delete a transaction |
-| `GET` | `/api/expenses/summary` | Get aggregated spending totals and category metrics |
-| `POST` | `/api/insights/generate` | Trigger AI LLM analysis & financial health scoring |
-| `POST` | `/api/expenses/seed` | Seed default sample expense records |
-| `POST` | `/api/expenses/clear` | Clear all expense entries |
+| **Authentication** | JWT Tokens in LocalStorage | **Rationale**: Stateless scalability across Vercel & Render. <br>**Tradeoff**: Requires explicit token expiration policies (7 days). |
+| **Database Resiliency** | Dual Storage Strategy | **Rationale**: Seamless execution even if PostgreSQL instance is temporarily spinning up on free hosting tiers. <br>**Tradeoff**: Memory store resets on server cold-restarts. |
+| **AI LLM Selection** | Multi-Provider Fallback | **Rationale**: Fallbacks across Gemini, Groq (Llama 3.3), OpenAI, and local heuristics prevent downtime during API rate limits. |
 
 ---
 
-## 🚢 Deployment Configuration
+## 📡 API Endpoints Reference
 
-* **Backend Deployment**: Hosted on **Render** as a Node Web Service listening on port 10000/dynamic port.
-* **Frontend Deployment**: Hosted on **Vercel** configured with single-page app rewrites ([vercel.json](file:///Users/mayankpandey/Downloads/Projects/smart-expense-tracker/client/vercel.json)) pointing to the Render backend via `VITE_API_URL`.
+| Method | Endpoint | Protection | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/auth/register` | Rate Limited | Register user account |
+| `POST` | `/api/auth/login` | Rate Limited | Authenticate & retrieve JWT token |
+| `GET` | `/api/auth/me` | JWT Required | Get current user profile |
+| `GET` | `/api/expenses` | Optional JWT | List user expenses with search/filters |
+| `POST` | `/api/expenses` | Optional JWT | Add transaction entry |
+| `POST` | `/api/expenses/bulk` | Optional JWT | Bulk import CSV transactions |
+| `PUT` | `/api/expenses/:id` | Optional JWT | Edit existing transaction |
+| `DELETE` | `/api/expenses/:id` | Optional JWT | Delete transaction |
+| `GET` | `/api/budgets` | Optional JWT | Retrieve monthly category budgets |
+| `POST` | `/api/budgets` | Optional JWT | Set monthly budget target |
+| `POST` | `/api/receipts/scan` | AI Rate Limited | Vision AI receipt image scanner |
+| `POST` | `/api/insights/generate` | AI Rate Limited | Trigger AI spending analysis |
+| `GET` | `/api/health` | Public | System status healthcheck |
+
+---
+
+## 💻 Local Installation
+
+```bash
+# 1. Clone repository
+git clone https://github.com/MAYANK479/smart-expense-tracker.git
+cd smart-expense-tracker
+
+# 2. Install monorepo dependencies
+npm run postinstall
+
+# 3. Run automated tests
+npm test
+
+# 4. Start Development Servers
+npm run dev:server    # Backend API on http://localhost:5001
+npm run dev:client    # Frontend UI on http://localhost:5173
+```
 
 ---
 
 ## 👨‍💻 Author
 
-Developed by **Mayank Pandey** ([MAYANK479](https://github.com/MAYANK479)).
+Designed & Built by **Mayank Pandey** ([MAYANK479](https://github.com/MAYANK479)).

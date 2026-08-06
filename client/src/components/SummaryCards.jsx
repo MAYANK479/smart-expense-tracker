@@ -1,10 +1,11 @@
 import React from 'react';
-import { DollarSign, Receipt, TrendingUp, Tag, ShieldCheck } from 'lucide-react';
+import { DollarSign, TrendingUp, Tag, ShieldCheck, AlertTriangle, Target } from 'lucide-react';
 
 export default function SummaryCards({ summary = {}, healthScore = null }) {
   const totalSpent = summary.totalSpent || 0;
   const totalEntries = summary.totalEntries || 0;
   const avgExpense = summary.avgExpense || 0;
+  const budgetComparison = summary.budgetComparison || [];
 
   // Find top category
   let topCategoryName = 'None';
@@ -17,6 +18,9 @@ export default function SummaryCards({ summary = {}, healthScore = null }) {
       }
     });
   }
+
+  const overspendCategories = budgetComparison.filter(b => b.isOverBudget);
+  const nearLimitCategories = budgetComparison.filter(b => b.isNearLimit && !b.isOverBudget);
 
   const cards = [
     {
@@ -54,59 +58,108 @@ export default function SummaryCards({ summary = {}, healthScore = null }) {
   ];
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-      gap: '16px',
-      marginBottom: '24px'
-    }}>
-      {cards.map((card, index) => {
-        const Icon = card.icon;
-        return (
-          <div 
-            key={index}
-            className="glass-card animate-fade-in"
-            style={{
-              padding: '20px',
-              position: 'relative',
-              overflow: 'hidden',
-              background: `var(--bg-card), ${card.bgGradient}`
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                {card.title}
-              </span>
+    <div className="space-y-4 mb-6">
+      {/* OVERSPEND WARNING BANNER */}
+      {overspendCategories.length > 0 && (
+        <div className="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl flex items-center justify-between text-xs text-rose-300 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <span>
+              <strong>Budget Overspend Alert:</strong> You have exceeded monthly targets in{' '}
+              {overspendCategories.map(c => `${c.category} ($${c.spent.toFixed(2)} / $${c.monthly_limit.toFixed(2)})`).join(', ')}.
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* SUMMARY KPI CARDS */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: '16px'
+      }}>
+        {cards.map((card, index) => {
+          const Icon = card.icon;
+          return (
+            <div 
+              key={index}
+              className="glass-card animate-fade-in"
+              style={{
+                padding: '20px',
+                position: 'relative',
+                overflow: 'hidden',
+                background: `var(--bg-card), ${card.bgGradient}`
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  {card.title}
+                </span>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '10px',
+                  background: `${card.color}20`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: card.color
+                }}>
+                  <Icon size={18} />
+                </div>
+              </div>
+              
               <div style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                background: `${card.color}20`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: card.color
+                fontSize: '1.5rem',
+                fontWeight: 700,
+                fontFamily: 'var(--font-heading)',
+                color: '#ffffff',
+                marginBottom: '4px'
               }}>
-                <Icon size={18} />
+                {card.value}
+              </div>
+
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                {card.subtitle}
               </div>
             </div>
-            
-            <div style={{
-              fontSize: '1.5rem',
-              fontWeight: 700,
-              fontFamily: 'var(--font-heading)',
-              color: '#ffffff',
-              marginBottom: '4px'
-            }}>
-              {card.value}
-            </div>
+          );
+        })}
+      </div>
 
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              {card.subtitle}
-            </div>
+      {/* BUDGET PROGRESS TRACKERS */}
+      {budgetComparison.length > 0 && (
+        <div className="glass-card p-4 rounded-xl border border-slate-800/80">
+          <div className="flex items-center gap-2 mb-3">
+            <Target className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-xs font-semibold text-slate-200 tracking-wide">Category Budget Progress</h3>
           </div>
-        );
-      })}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {budgetComparison.map(b => {
+              const progressColor = b.isOverBudget ? '#ef4444' : b.isNearLimit ? '#f59e0b' : '#10b981';
+              return (
+                <div key={b.category} className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800/60 text-xs">
+                  <div className="flex justify-between font-medium text-slate-300 mb-1">
+                    <span>{b.category}</span>
+                    <span className={b.isOverBudget ? 'text-rose-400 font-bold' : 'text-slate-400'}>
+                      ${b.spent.toFixed(2)} / ${b.monthly_limit.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full transition-all duration-500 rounded-full"
+                      style={{
+                        width: `${Math.min(100, b.percentUsed)}%`,
+                        backgroundColor: progressColor
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

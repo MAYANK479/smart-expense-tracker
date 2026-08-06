@@ -5,12 +5,18 @@ import ChartsView from './components/ChartsView';
 import AIInsights from './components/AIInsights';
 import ExpenseTable from './components/ExpenseTable';
 import ExpenseForm from './components/ExpenseForm';
+import AuthModal from './components/AuthModal';
+import BudgetModal from './components/BudgetModal';
+import CSVImportModal from './components/CSVImportModal';
 import { api } from './services/api';
 
 export default function App() {
+  const [user, setUser] = useState(null);
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState({});
+  const [budgets, setBudgets] = useState([]);
   const [aiInsights, setAiInsights] = useState(null);
+
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,26 +25,46 @@ export default function App() {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Modals State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
 
-  // Fetch expenses and summary from backend API
+  // Check current user session on mount
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await api.getMe();
+        if (res && res.user) {
+          setUser(res.user);
+        }
+      } catch (err) {
+        console.warn('Auth session check:', err.message);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  // Fetch expenses, summary, and budgets
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
       
-      const [expRes, sumRes] = await Promise.all([
+      const [expRes, sumRes, budRes] = await Promise.all([
         api.getExpenses({ category: categoryFilter, search: searchQuery }),
-        api.getSummary()
+        api.getSummary(),
+        api.getBudgets().catch(() => ({ budgets: [] }))
       ]);
 
       if (expRes.success) setExpenses(expRes.data);
       if (sumRes.success) setSummary(sumRes.summary);
+      if (budRes.success) setBudgets(budRes.budgets || []);
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Could not connect to backend server. Make sure the server is running on http://localhost:5001');
+      setError('Could not connect to backend server. Make sure the server is running.');
     } finally {
       setLoading(false);
     }
@@ -48,6 +74,18 @@ export default function App() {
     fetchData();
   }, [fetchData]);
 
+  // Auth Handlers
+  const handleAuthSuccess = (userData) => {
+    setUser(userData);
+    fetchData();
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setUser(null);
+    fetchData();
+  };
+
   // Handle Add/Edit Form Submit
   const handleFormSubmit = async (formData) => {
     try {
@@ -56,7 +94,7 @@ export default function App() {
       } else {
         await api.addExpense(formData);
       }
-      setIsModalOpen(false);
+      setIsAddModalOpen(false);
       setEditingExpense(null);
       await fetchData();
     } catch (err) {
@@ -109,7 +147,7 @@ export default function App() {
 
   // Clear all data
   const handleClearData = async () => {
-    if (!window.confirm('Are you sure you want to clear ALL recorded expenses?')) return;
+    if (!window.confirm('Are you sure you want to clear recorded expenses?')) return;
     try {
       setLoading(true);
       await api.clearAll();
@@ -124,18 +162,23 @@ export default function App() {
 
   const handleOpenAddModal = () => {
     setEditingExpense(null);
-    setIsModalOpen(true);
+    setIsAddModalOpen(true);
   };
 
   const handleOpenEditModal = (expense) => {
     setEditingExpense(expense);
-    setIsModalOpen(true);
+    setIsAddModalOpen(true);
   };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header Navigation */}
       <Navbar 
+        user={user}
+        onOpenAuthModal={() => setIsAuthModalOpen(true)}
+        onLogout={handleLogout}
+        onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+        onOpenCSVModal={() => setIsCSVModalOpen(true)}
         onOpenAddModal={handleOpenAddModal}
         onSeedData={handleSeedData}
         onClearData={handleClearData}
@@ -165,7 +208,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Dashboard Top Summary Metrics */}
+        {/* Dashboard Top Summary Metrics & Budget Progress */}
         <SummaryCards 
           summary={summary} 
           healthScore={aiInsights ? aiInsights.healthScore : null} 
@@ -194,12 +237,34 @@ export default function App() {
         />
       </main>
 
-      {/* Manual Entry Modal */}
+      {/* Manual Entry & Receipt OCR Modal */}
       <ExpenseForm 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleFormSubmit}
         initialData={editingExpense}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
+      {/* Budget Management Modal */}
+      <BudgetModal
+        isOpen={isBudgetModalOpen}
+        onClose={() => setIsBudgetModalOpen(false)}
+        onBudgetUpdated={fetchData}
+        currentBudgets={budgets}
+      />
+
+      {/* CSV Bank Statement Import Modal */}
+      <CSVImportModal
+        isOpen={isCSVModalOpen}
+        onClose={() => setIsCSVModalOpen(false)}
+        onImportSuccess={fetchData}
       />
 
       {/* Footer */}
@@ -211,7 +276,7 @@ export default function App() {
         fontSize: '0.8rem',
         marginTop: 'auto'
       }}>
-        Smart Expense Tracker with AI Insights &bull; Built with ReactJS, NodeJS, PostgreSQL & OpenAI/Gemini
+        Smart Expense Tracker &bull; Built with ReactJS, Express, PostgreSQL, Google Gemini & Groq AI
       </footer>
     </div>
   );

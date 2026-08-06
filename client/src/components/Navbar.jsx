@@ -1,16 +1,27 @@
 import React from 'react';
-import { Wallet, Sparkles, Database, PlusCircle, RefreshCw, Trash2 } from 'lucide-react';
+import { Wallet, Sparkles, Database, PlusCircle, RefreshCw, Trash2, User, LogOut, Target, FileSpreadsheet, LogIn } from 'lucide-react';
 
-export default function Navbar({ onOpenAddModal, onSeedData, onClearData, isPostgresConnected, loading }) {
+export default function Navbar({
+  user,
+  onOpenAuthModal,
+  onLogout,
+  onOpenBudgetModal,
+  onOpenCSVModal,
+  onOpenAddModal,
+  onSeedData,
+  onClearData,
+  isPostgresConnected,
+  loading
+}) {
   return (
     <header style={{
-      background: 'rgba(11, 15, 25, 0.8)',
+      background: 'rgba(11, 15, 25, 0.85)',
       backdropFilter: 'blur(16px)',
       borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
       position: 'sticky',
       top: 0,
       zIndex: 50,
-      padding: '16px 24px'
+      padding: '14px 24px'
     }}>
       <div style={{
         maxWidth: '1280px',
@@ -47,21 +58,39 @@ export default function Navbar({ onOpenAddModal, onSeedData, onClearData, isPost
                 SmartExpense AI
               </h1>
               <span className="badge badge-indigo" style={{ fontSize: '0.7rem' }}>
-                <Sparkles size={12} /> Insights v2.0
+                <Sparkles size={12} /> Enterprise v2.5
               </span>
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Intelligent Expense Tracker & Pattern Analytics
+              Intelligent Financial Tracking & AI Pattern Analytics
             </p>
           </div>
         </div>
 
         {/* Database Status & Quick Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div className={`badge ${isPostgresConnected ? 'badge-emerald' : 'badge-amber'}`} style={{ padding: '6px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div className={`badge ${isPostgresConnected ? 'badge-emerald' : 'badge-amber'}`} style={{ padding: '6px 10px', fontSize: '0.75rem' }}>
             <Database size={13} />
             {isPostgresConnected ? 'PostgreSQL Active' : 'Postgres Dialect / Local DB'}
           </div>
+
+          <button 
+            onClick={onOpenBudgetModal}
+            className="glow-btn glow-btn-secondary"
+            title="Set category monthly targets and overspend alerts"
+          >
+            <Target size={15} />
+            Budgets
+          </button>
+
+          <button 
+            onClick={onOpenCSVModal}
+            className="glow-btn glow-btn-secondary"
+            title="Upload CSV bank statement"
+          >
+            <FileSpreadsheet size={15} />
+            Import CSV
+          </button>
 
           <button 
             onClick={onSeedData}
@@ -70,7 +99,7 @@ export default function Navbar({ onOpenAddModal, onSeedData, onClearData, isPost
             title="Populate sample expenses to quickly evaluate AI insights"
           >
             <RefreshCw size={15} className={loading ? 'pulse-glow' : ''} />
-            Seed Sample Data
+            Seed Data
           </button>
 
           <button 
@@ -78,18 +107,41 @@ export default function Navbar({ onOpenAddModal, onSeedData, onClearData, isPost
             disabled={loading}
             className="glow-btn glow-btn-secondary"
             style={{ color: '#fda4af', borderColor: 'rgba(244, 63, 94, 0.2)' }}
-            title="Reset all expense records"
+            title="Reset expense records"
           >
             <Trash2 size={15} />
             Clear
           </button>
+
+          {user ? (
+            <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs">
+              <User className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="text-slate-200 font-medium">{user.name}</span>
+              <button
+                onClick={onLogout}
+                className="text-slate-400 hover:text-red-400 ml-1 transition-colors"
+                title="Sign Out"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={onOpenAuthModal}
+              className="glow-btn glow-btn-secondary"
+              style={{ color: '#818cf8', borderColor: 'rgba(99, 102, 241, 0.3)' }}
+            >
+              <LogIn size={15} />
+              Sign In
+            </button>
+          )}
 
           <button 
             onClick={onOpenAddModal}
             className="glow-btn"
           >
             <PlusCircle size={16} />
-            Add Expense Entry
+            Add Expense
           </button>
         </div>
       </div>
