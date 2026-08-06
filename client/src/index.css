@@ -71,13 +71,16 @@ html.light {
   padding: 0;
 }
 
-body {
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
   background-color: var(--bg-base);
   color: var(--text-main);
   font-family: var(--font-sans);
   min-height: 100vh;
-  overflow-x: hidden;
   transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Glassmorphism Surface Component Utility */
@@ -112,7 +115,7 @@ body {
   pointer-events: none;
 }
 
-/* Button UI Utilities */
+/* Button UI Utilities & 44px Touch Targets */
 .btn-primary {
   background: var(--brand-gradient);
   color: #FFFFFF;
@@ -126,6 +129,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .btn-primary:hover {
@@ -145,6 +149,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 44px;
 }
 
 .btn-secondary:hover {
@@ -154,8 +159,8 @@ body {
 
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-base);
@@ -179,6 +184,7 @@ body {
   font-size: 0.9rem;
   font-family: inherit;
   outline: none;
+  min-height: 44px;
   transition: all 0.2s ease;
 }
 
@@ -195,4 +201,17 @@ body {
 
 .animate-pulse-glow {
   animation: pulseGlow 2.5s infinite;
+}
+
+/* Mobile Responsiveness Helper Rules */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2.25rem !important;
+  }
+  h2 {
+    font-size: 1.75rem !important;
+  }
+  .glass-card {
+    border-radius: 16px;
+  }
 }
