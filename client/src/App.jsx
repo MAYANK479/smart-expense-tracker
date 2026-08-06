@@ -20,13 +20,19 @@ export default function App() {
   const [user, setUser] = useState(null);
 
   const [currency, setCurrency] = useState(() => {
-    const saved = localStorage.getItem('smart_expense_currency');
-    if (saved) {
-      const parsed = CURRENCIES.find(c => c.code === saved);
-      if (parsed) return parsed;
+    try {
+      const saved = localStorage.getItem('smart_expense_currency');
+      if (saved && Array.isArray(CURRENCIES)) {
+        const parsed = CURRENCIES.find(c => c.code === saved);
+        if (parsed) return parsed;
+      }
+    } catch (e) {
+      console.warn('Currency load warning:', e);
     }
-    return CURRENCIES[0]; // Default USD ($)
+    return (CURRENCIES && CURRENCIES[0]) ? CURRENCIES[0] : { code: 'USD', symbol: '$', name: 'USD ($)' };
   });
+
+  const currencySymbol = (currency && currency.symbol) ? currency.symbol : '$';
 
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState({});
@@ -50,8 +56,13 @@ export default function App() {
   const [editingExpense, setEditingExpense] = useState(null);
 
   const handleCurrencyChange = (newCurrency) => {
+    if (!newCurrency) return;
     setCurrency(newCurrency);
-    localStorage.setItem('smart_expense_currency', newCurrency.code);
+    try {
+      localStorage.setItem('smart_expense_currency', newCurrency.code);
+    } catch (e) {
+      console.warn('Localstorage error:', e);
+    }
   };
 
   // Check current user session on mount
@@ -81,12 +92,12 @@ export default function App() {
         api.getBudgets().catch(() => ({ budgets: [] }))
       ]);
 
-      if (expRes.success) setExpenses(expRes.data);
-      if (sumRes.success) setSummary(sumRes.summary);
-      if (budRes.success) setBudgets(budRes.budgets || []);
+      if (expRes && expRes.success) setExpenses(expRes.data || []);
+      if (sumRes && sumRes.success) setSummary(sumRes.summary || {});
+      if (budRes && budRes.success) setBudgets(budRes.budgets || []);
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Could not connect to backend server. Make sure the server is running.');
+      setError('Could not connect to backend server. Operating with offline resilience mode.');
     } finally {
       setLoading(false);
     }
@@ -153,7 +164,7 @@ export default function App() {
       const res = await api.generateAIInsights({
         category: categoryFilter !== 'All' ? categoryFilter : undefined
       });
-      if (res.success) {
+      if (res && res.success) {
         setAiInsights(res.data);
       }
     } catch (err) {
@@ -208,7 +219,7 @@ export default function App() {
       {/* Header Navigation */}
       <Navbar 
         user={user}
-        currency={currency}
+        currency={currency || { code: 'USD', symbol: '$', name: 'USD ($)' }}
         onCurrencyChange={handleCurrencyChange}
         activeView={activeView}
         onViewChange={setActiveView}
@@ -254,16 +265,16 @@ export default function App() {
 
           {/* Dashboard Summary Metrics Cards */}
           <SummaryCards 
-            summary={summary} 
+            summary={summary || {}} 
             healthScore={aiInsights ? aiInsights.healthScore : null}
-            currencySymbol={currency.symbol}
+            currencySymbol={currencySymbol}
           />
 
           {/* Category Budget Tracker & Progress Bars */}
           <BudgetTracker
-            budgetComparison={summary.budgetComparison || []}
+            budgetComparison={(summary && summary.budgetComparison) || []}
             onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-            currencySymbol={currency.symbol}
+            currencySymbol={currencySymbol}
           />
 
           {/* AI Insights & Pattern Analysis Engine */}
@@ -275,18 +286,18 @@ export default function App() {
           />
 
           {/* Interactive Recharts Analytics */}
-          <ChartsView expenses={expenses} />
+          <ChartsView expenses={expenses || []} />
 
           {/* Financial Transactions Log Table */}
           <ExpenseTable 
-            expenses={expenses}
+            expenses={expenses || []}
             onEdit={handleOpenEditModal}
             onDelete={handleDelete}
             selectedCategory={categoryFilter}
             onCategoryChange={setCategoryFilter}
             search={searchQuery}
             onSearchChange={setSearchQuery}
-            currencySymbol={currency.symbol}
+            currencySymbol={currencySymbol}
           />
         </main>
       )}
@@ -297,7 +308,7 @@ export default function App() {
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleFormSubmit}
         initialData={editingExpense}
-        currencySymbol={currency.symbol}
+        currencySymbol={currencySymbol}
       />
 
       {/* AI Bill Scanner Modal */}
@@ -305,7 +316,7 @@ export default function App() {
         isOpen={isScannerModalOpen}
         onClose={() => setIsScannerModalOpen(false)}
         onImportExtracted={handleOCRImport}
-        currencySymbol={currency.symbol}
+        currencySymbol={currencySymbol}
       />
 
       {/* Auth Modal */}
@@ -320,7 +331,7 @@ export default function App() {
         isOpen={isBudgetModalOpen}
         onClose={() => setIsBudgetModalOpen(false)}
         onBudgetUpdated={fetchData}
-        currentBudgets={budgets}
+        currentBudgets={budgets || []}
       />
 
       {/* CSV Bank Statement Import Modal */}
