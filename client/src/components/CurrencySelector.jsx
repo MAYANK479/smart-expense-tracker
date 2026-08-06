@@ -3,17 +3,18 @@ import { Globe } from 'lucide-react';
 import { CURRENCIES, formatCurrency } from '../utils/currencies';
 export { formatCurrency };
 
-export default function CurrencySelector({ currentCurrency, onCurrencyChange }) {
+export default function CurrencySelector({ currentCurrency = { code: 'USD', name: 'USD ($)', symbol: '$' }, onCurrencyChange }) {
+  const selectedCode = currentCurrency && currentCurrency.code ? currentCurrency.code : 'USD';
   return (
-    <div className="flex items-center gap-1.5 bg-purple-950/40 hover:bg-purple-900/50 px-3 py-1.5 rounded-xl border border-purple-500/30 text-xs transition-colors">
-      <Globe className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+    <div className="flex items-center gap-1.5 bg-purple-50 hover:bg-purple-100 px-3 py-1.5 rounded-xl border border-purple-200 text-xs transition-colors">
+      <Globe className="w-3.5 h-3.5 text-purple-700 shrink-0" />
       <select
-        value={currentCurrency.code}
+        value={selectedCode}
         onChange={(e) => {
           const selected = CURRENCIES.find(c => c.code === e.target.value);
-          if (selected) onCurrencyChange(selected);
+          if (selected && onCurrencyChange) onCurrencyChange(selected);
         }}
-        className="bg-transparent text-purple-100 font-semibold outline-none cursor-pointer text-xs"
+        className="bg-transparent text-purple-900 font-bold outline-none cursor-pointer text-xs"
       >
         {CURRENCIES.map(c => (
           <option key={c.code} value={c.code} style={{ background: '#0A0614', color: '#fff' }}>

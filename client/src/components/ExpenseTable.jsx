@@ -25,7 +25,8 @@ export default function ExpenseTable({
   onCategoryChange, 
   search, 
   onSearchChange,
-  currentCurrency 
+  currencySymbol = '$',
+  currentCurrency = { code: 'USD', symbol: '$' }
 }) {
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('DESC');
@@ -54,16 +55,18 @@ export default function ExpenseTable({
     return 0;
   });
 
+  const currencyCode = currentCurrency && currentCurrency.code ? currentCurrency.code : 'USD';
+
   return (
     <div className="glass-card animate-fade-in" style={{ padding: '24px' }}>
       {/* Table Header & Controls */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px', marginBottom: '20px' }}>
         <div>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: '#ffffff' }}>
+          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.1rem', color: 'var(--text-primary)' }}>
             Expense & Transaction History
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            Showing {sortedExpenses.length} entries ({currentCurrency.code})
+            Showing {sortedExpenses.length} entries ({currencyCode})
           </p>
         </div>
 
