@@ -15,8 +15,11 @@ import CSVImportModal from './components/CSVImportModal';
 import { api } from './services/api';
 import { CURRENCIES } from './utils/currencies';
 
+import Sidebar from './components/Sidebar';
+
 export default function App() {
   const [activeView, setActiveView] = useState('dashboard'); // 'landing' | 'dashboard'
+  const [sidebarTab, setSidebarTab] = useState('dashboard');
   const [user, setUser] = useState(null);
 
   const [currency, setCurrency] = useState(() => {
@@ -242,71 +245,68 @@ export default function App() {
           onSeedDemoData={handleSeedData}
         />
       ) : (
-        <main style={{
-          maxWidth: '1280px',
-          width: '100%',
-          margin: '0 auto',
-          padding: '24px',
-          flex: 1
-        }}>
-          {error && (
-            <div style={{
-              background: 'rgba(244, 63, 94, 0.15)',
-              border: '1px solid rgba(244, 63, 94, 0.4)',
-              color: '#fda4af',
-              padding: '14px 18px',
-              borderRadius: '12px',
-              fontSize: '0.88rem',
-              marginBottom: '24px'
-            }}>
-              {error}
-            </div>
-          )}
-
-          {/* Dashboard Summary Metrics Cards */}
-          <SummaryCards 
-            summary={summary || {}} 
-            healthScore={aiInsights ? aiInsights.healthScore : null}
-            currencySymbol={currencySymbol}
-            user={user}
-            onSeedData={handleSeedData}
-            onClearData={handleClearData}
+        <div className="max-w-7xl w-full mx-auto px-4 py-6 flex flex-col md:flex-row gap-6 flex-1">
+          {/* Floating Collapsible Sidebar */}
+          <Sidebar
+            activeTab={sidebarTab}
+            onTabChange={setSidebarTab}
             onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-            onOpenCSVModal={() => setIsCSVModalOpen(true)}
-            onOpenScannerModal={() => setIsScannerModalOpen(true)}
-            loading={loading}
+            isPostgresConnected={summary.isPostgresConnected || false}
           />
 
-          {/* Category Budget Tracker & Progress Bars */}
-          <BudgetTracker
-            budgetComparison={(summary && summary.budgetComparison) || []}
-            onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
-            currencySymbol={currencySymbol}
-          />
+          {/* Dashboard Main Content Area */}
+          <main className="flex-1 min-w-0 space-y-6">
+            {error && (
+              <div className="bg-rose-500/15 border border-rose-500/40 text-rose-300 p-4 rounded-2xl text-xs font-semibold">
+                {error}
+              </div>
+            )}
 
-          {/* AI Insights & Pattern Analysis Engine */}
-          <AIInsights 
-            onGenerate={handleGenerateAI}
-            insights={aiInsights}
-            loading={aiLoading}
-            error={error}
-          />
+            {/* Dashboard Summary Metrics Cards */}
+            <SummaryCards 
+              summary={summary || {}} 
+              healthScore={aiInsights ? aiInsights.healthScore : null}
+              currencySymbol={currencySymbol}
+              user={user}
+              onSeedData={handleSeedData}
+              onClearData={handleClearData}
+              onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+              onOpenCSVModal={() => setIsCSVModalOpen(true)}
+              onOpenScannerModal={() => setIsScannerModalOpen(true)}
+              loading={loading}
+            />
 
-          {/* Interactive Recharts Analytics */}
-          <ChartsView expenses={expenses || []} />
+            {/* Category Budget Tracker & Progress Bars */}
+            <BudgetTracker
+              budgetComparison={(summary && summary.budgetComparison) || []}
+              onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+              currencySymbol={currencySymbol}
+            />
 
-          {/* Financial Transactions Log Table */}
-          <ExpenseTable 
-            expenses={expenses || []}
-            onEdit={handleOpenEditModal}
-            onDelete={handleDelete}
-            selectedCategory={categoryFilter}
-            onCategoryChange={setCategoryFilter}
-            search={searchQuery}
-            onSearchChange={setSearchQuery}
-            currencySymbol={currencySymbol}
-          />
-        </main>
+            {/* AI Insights & Pattern Analysis Engine */}
+            <AIInsights 
+              onGenerate={handleGenerateAI}
+              insights={aiInsights}
+              loading={aiLoading}
+              error={error}
+            />
+
+            {/* Interactive Recharts Analytics */}
+            <ChartsView expenses={expenses || []} />
+
+            {/* Financial Transactions Log Table */}
+            <ExpenseTable 
+              expenses={expenses || []}
+              onEdit={handleOpenEditModal}
+              onDelete={handleDelete}
+              selectedCategory={categoryFilter}
+              onCategoryChange={setCategoryFilter}
+              search={searchQuery}
+              onSearchChange={setSearchQuery}
+              currencySymbol={currencySymbol}
+            />
+          </main>
+        </div>
       )}
 
       {/* Manual Entry & Photo Receipt Modal */}
