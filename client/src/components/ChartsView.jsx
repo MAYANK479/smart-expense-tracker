@@ -1,32 +1,35 @@
 import React from 'react';
 import { 
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area 
 } from 'recharts';
-import { PieChart as PieIcon, BarChart3 } from 'lucide-react';
+import { PieChart as PieIcon, BarChart3, TrendingUp } from 'lucide-react';
+import Card from './ui/Card';
+import Badge from './ui/Badge';
+import { formatCurrency } from '../utils/currencies';
 
 const COLOR_PALETTE = [
-  '#6366F1', // Indigo
-  '#10B981', // Emerald
   '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#10B981', // Emerald
   '#F59E0B', // Amber
   '#F43F5E', // Rose
   '#06B6D4', // Cyan
-  '#EC4899', // Pink
   '#3B82F6', // Blue
   '#64748B'  // Slate
 ];
 
-export default function ChartsView({ expenses = [] }) {
+export default function ChartsView({ expenses = [], currencySymbol = '$' }) {
   if (!expenses || expenses.length === 0) {
     return (
-      <div className="glass-card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-        No expense data available to render charts. Log some entries or click "Seed Sample Data".
-      </div>
+      <Card padding="p-8" className="text-center text-slate-400 space-y-3 mb-6">
+        <PieIcon className="w-10 h-10 mx-auto text-purple-400 opacity-60" />
+        <p className="text-sm">No transaction entries logged yet to render interactive analytics charts.</p>
+      </Card>
     );
   }
 
-  // 1. Process Category Breakdown for Pie Chart
+  // 1. Category Breakdown for Donut Chart
   const categoryMap = {};
   expenses.forEach(item => {
     const amt = parseFloat(item.amount) || 0;
@@ -39,7 +42,7 @@ export default function ChartsView({ expenses = [] }) {
     value: Number(value.toFixed(2))
   })).sort((a, b) => b.value - a.value);
 
-  // 2. Process Daily Spending Trend for Bar Chart
+  // 2. Daily Spending Trend for Bar & Area Chart
   const dateMap = {};
   expenses.forEach(item => {
     const amt = parseFloat(item.amount) || 0;
@@ -47,7 +50,7 @@ export default function ChartsView({ expenses = [] }) {
     dateMap[dt] = (dateMap[dt] || 0) + amt;
   });
 
-  const barData = Object.entries(dateMap).map(([date, total]) => ({
+  const chartData = Object.entries(dateMap).map(([date, total]) => ({
     date: date.length > 5 ? date.substring(5) : date,
     fullDate: date,
     total: Number(total.toFixed(2))
@@ -57,17 +60,10 @@ export default function ChartsView({ expenses = [] }) {
     if (active && payload && payload.length) {
       const data = payload[0];
       return (
-        <div style={{
-          background: '#0F172A',
-          border: '1px solid rgba(255,255,255,0.15)',
-          padding: '10px 14px',
-          borderRadius: '8px',
-          boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
-          fontSize: '0.82rem'
-        }}>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '4px' }}>{data.name || data.payload.fullDate}</p>
-          <p style={{ color: '#ffffff', fontWeight: 700, fontSize: '1rem' }}>
-            ${data.value || data.payload.total}
+        <div className="bg-slate-950 border border-purple-500/30 p-3 rounded-xl shadow-2xl text-xs space-y-1">
+          <p className="text-slate-400 font-semibold">{data.name || data.payload.fullDate}</p>
+          <p className="text-white font-extrabold text-sm">
+            {formatCurrency(data.value || data.payload.total, currencySymbol)}
           </p>
         </div>
       );
@@ -76,23 +72,24 @@ export default function ChartsView({ expenses = [] }) {
   };
 
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
-      gap: '20px',
-      marginBottom: '24px'
-    }}>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      
       {/* Category Breakdown Donut Chart */}
-      <div className="glass-card animate-fade-in" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PieIcon size={18} color="#8B5CF6" />
-            Spending by Category
-          </h3>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Proportion</span>
+      <Card padding="p-6" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400">
+              <PieIcon className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm text-white">Category Allocation</h3>
+              <p className="text-xs text-slate-400">Proportional spending distribution</p>
+            </div>
+          </div>
+          <Badge variant="purple" size="sm">Donut View</Badge>
         </div>
 
-        <div style={{ width: '100%', height: 260 }}>
+        <div className="w-full h-64">
           <ResponsiveContainer>
             <PieChart>
               <Pie
@@ -105,7 +102,7 @@ export default function ChartsView({ expenses = [] }) {
                 dataKey="value"
               >
                 {pieData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLOR_PALETTE[index % COLOR_PALETTE.length]} stroke="rgba(0,0,0,0.4)" />
+                  <Cell key={`cell-${index}`} fill={COLOR_PALETTE[index % COLOR_PALETTE.length]} stroke="rgba(0,0,0,0.3)" />
                 ))}
               </Pie>
               <Tooltip content={<CustomTooltip />} />
@@ -113,41 +110,47 @@ export default function ChartsView({ expenses = [] }) {
                 layout="horizontal" 
                 verticalAlign="bottom" 
                 align="center"
-                formatter={(value) => <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>{value}</span>}
+                formatter={(value) => <span className="text-slate-400 text-xs font-semibold">{value}</span>}
               />
             </PieChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </Card>
 
-      {/* Daily Spending Bar Chart */}
-      <div className="glass-card animate-fade-in" style={{ padding: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <BarChart3 size={18} color="#6366F1" />
-            Spending Velocity & Daily Outlay
-          </h3>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Timeline</span>
+      {/* Daily Cashflow Velocity Area Chart */}
+      <Card padding="p-6" className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-xl bg-indigo-500/20 text-indigo-400">
+              <BarChart3 className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-extrabold text-sm text-white">Spending Velocity & Daily Outlay</h3>
+              <p className="text-xs text-slate-400">Transaction timeline & cash flow curves</p>
+            </div>
+          </div>
+          <Badge variant="indigo" size="sm">Area Spline</Badge>
         </div>
 
-        <div style={{ width: '100%', height: 260 }}>
+        <div className="w-full h-64">
           <ResponsiveContainer>
-            <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#EC4899" stopOpacity={0.0}/>
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
               <YAxis stroke="#64748b" fontSize={11} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="total" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
-              <defs>
-                <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#6366F1" stopOpacity={0.9} />
-                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity={0.4} />
-                </linearGradient>
-              </defs>
-            </BarChart>
+              <Area type="monotone" dataKey="total" stroke="#8B5CF6" strokeWidth={3} fillOpacity={1} fill="url(#colorTotal)" />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </Card>
+
     </div>
   );
 }

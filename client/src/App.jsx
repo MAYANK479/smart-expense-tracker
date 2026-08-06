@@ -292,7 +292,7 @@ export default function App() {
             />
 
             {/* Interactive Recharts Analytics */}
-            <ChartsView expenses={expenses || []} />
+            <ChartsView expenses={expenses || []} currencySymbol={currencySymbol} />
 
             {/* Financial Transactions Log Table */}
             <ExpenseTable 
