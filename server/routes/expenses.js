@@ -108,21 +108,31 @@ router.delete('/:id', async (req, res, next) => {
 router.get('/summary', async (req, res, next) => {
   try {
     const userId = req.user ? req.user.id : null;
-    const expenses = await db.getAllExpenses({ userId });
+    const items = await db.getAllExpenses({ userId });
     const budgets = await db.getBudgets(userId);
 
-    const totalSpent = expenses.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
-    const count = expenses.length;
-    const avgExpense = count > 0 ? (totalSpent / count).toFixed(2) : 0;
+    let totalIncome = 0;
+    let totalSpent = 0;
+    let expenseCount = 0;
 
     const byCategory = {};
     const byPayment = {};
 
-    expenses.forEach(item => {
+    items.forEach(item => {
       const amt = parseFloat(item.amount) || 0;
-      byCategory[item.category] = (byCategory[item.category] || 0) + amt;
-      byPayment[item.payment_method] = (byPayment[item.payment_method] || 0) + amt;
+      if (item.type === 'income') {
+        totalIncome += amt;
+      } else {
+        totalSpent += amt;
+        expenseCount++;
+        byCategory[item.category] = (byCategory[item.category] || 0) + amt;
+        byPayment[item.payment_method] = (byPayment[item.payment_method] || 0) + amt;
+      }
     });
+
+    const netSavings = totalIncome - totalSpent;
+    const savingsRate = totalIncome > 0 ? Number(((netSavings / totalIncome) * 100).toFixed(1)) : 0;
+    const avgExpense = expenseCount > 0 ? (totalSpent / expenseCount).toFixed(2) : 0;
 
     // Budget overspend status calculation
     const budgetComparison = budgets.map(b => {
@@ -142,8 +152,11 @@ router.get('/summary', async (req, res, next) => {
     res.json({
       success: true,
       summary: {
+        totalIncome,
         totalSpent,
-        totalEntries: count,
+        netSavings,
+        savingsRate,
+        totalEntries: items.length,
         avgExpense,
         byCategory,
         byPayment,

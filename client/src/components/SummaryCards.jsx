@@ -1,51 +1,44 @@
 import React from 'react';
-import { DollarSign, TrendingUp, Tag, ShieldCheck, AlertTriangle, Target } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, ShieldCheck, AlertTriangle, Target, PiggyBank, ArrowUpRight } from 'lucide-react';
+import { formatCurrency } from '../utils/currencies';
 
-export default function SummaryCards({ summary = {}, healthScore = null }) {
+export default function SummaryCards({ summary = {}, healthScore = null, currencySymbol = '$' }) {
+  const totalIncome = summary.totalIncome || 0;
   const totalSpent = summary.totalSpent || 0;
+  const netSavings = summary.netSavings !== undefined ? summary.netSavings : (totalIncome - totalSpent);
+  const savingsRate = summary.savingsRate || 0;
+
   const totalEntries = summary.totalEntries || 0;
-  const avgExpense = summary.avgExpense || 0;
   const budgetComparison = summary.budgetComparison || [];
 
-  // Find top category
-  let topCategoryName = 'None';
-  let topCategoryAmount = 0;
-  if (summary.byCategory) {
-    Object.entries(summary.byCategory).forEach(([cat, val]) => {
-      if (val > topCategoryAmount) {
-        topCategoryAmount = val;
-        topCategoryName = cat;
-      }
-    });
-  }
-
   const overspendCategories = budgetComparison.filter(b => b.isOverBudget);
-  const nearLimitCategories = budgetComparison.filter(b => b.isNearLimit && !b.isOverBudget);
 
   const cards = [
     {
-      title: 'Total Spending',
-      value: `$${totalSpent.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      subtitle: `${totalEntries} entries recorded`,
-      icon: DollarSign,
-      color: '#6366F1',
-      bgGradient: 'radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 70%)'
-    },
-    {
-      title: 'Average Expense',
-      value: `$${parseFloat(avgExpense).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      subtitle: 'Per transaction average',
-      icon: TrendingUp,
+      title: 'Total Income',
+      value: formatCurrency(totalIncome, currencySymbol),
+      subtitle: 'Recorded inflow',
+      icon: ArrowUpRight,
       color: '#10B981',
       bgGradient: 'radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), transparent 70%)'
     },
     {
-      title: 'Top Category',
-      value: topCategoryName,
-      subtitle: topCategoryAmount > 0 ? `$${topCategoryAmount.toFixed(2)} spent` : 'No data',
-      icon: Tag,
-      color: '#8B5CF6',
-      bgGradient: 'radial-gradient(circle at top right, rgba(139, 92, 246, 0.15), transparent 70%)'
+      title: 'Total Expenses',
+      value: formatCurrency(totalSpent, currencySymbol),
+      subtitle: `${totalEntries} entries recorded`,
+      icon: TrendingDown,
+      color: '#F43F5E',
+      bgGradient: 'radial-gradient(circle at top right, rgba(244, 63, 94, 0.15), transparent 70%)'
+    },
+    {
+      title: 'Net Cash Flow',
+      value: formatCurrency(netSavings, currencySymbol),
+      subtitle: `${savingsRate}% savings rate`,
+      icon: PiggyBank,
+      color: netSavings >= 0 ? '#10B981' : '#F43F5E',
+      bgGradient: netSavings >= 0 
+        ? 'radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), transparent 70%)' 
+        : 'radial-gradient(circle at top right, rgba(244, 63, 94, 0.15), transparent 70%)'
     },
     {
       title: 'AI Health Score',
@@ -66,7 +59,7 @@ export default function SummaryCards({ summary = {}, healthScore = null }) {
             <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>
               <strong>Budget Overspend Alert:</strong> You have exceeded monthly targets in{' '}
-              {overspendCategories.map(c => `${c.category} ($${c.spent.toFixed(2)} / $${c.monthly_limit.toFixed(2)})`).join(', ')}.
+              {overspendCategories.map(c => `${c.category} (${formatCurrency(c.spent, currencySymbol)} / ${formatCurrency(c.monthly_limit, currencySymbol)})`).join(', ')}.
             </span>
           </div>
         </div>
@@ -110,7 +103,7 @@ export default function SummaryCards({ summary = {}, healthScore = null }) {
               </div>
               
               <div style={{
-                fontSize: '1.5rem',
+                fontSize: '1.4rem',
                 fontWeight: 700,
                 fontFamily: 'var(--font-heading)',
                 color: '#ffffff',
@@ -142,7 +135,7 @@ export default function SummaryCards({ summary = {}, healthScore = null }) {
                   <div className="flex justify-between font-medium text-slate-300 mb-1">
                     <span>{b.category}</span>
                     <span className={b.isOverBudget ? 'text-rose-400 font-bold' : 'text-slate-400'}>
-                      ${b.spent.toFixed(2)} / ${b.monthly_limit.toFixed(2)}
+                      {formatCurrency(b.spent, currencySymbol)} / {formatCurrency(b.monthly_limit, currencySymbol)}
                     </span>
                   </div>
                   <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">

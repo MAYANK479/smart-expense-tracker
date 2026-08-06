@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS expenses (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    type VARCHAR(20) DEFAULT 'expense',
     title VARCHAR(255) NOT NULL,
     amount NUMERIC(10, 2) NOT NULL,
     category VARCHAR(100) NOT NULL,

@@ -9,9 +9,19 @@ import AuthModal from './components/AuthModal';
 import BudgetModal from './components/BudgetModal';
 import CSVImportModal from './components/CSVImportModal';
 import { api } from './services/api';
+import { CURRENCIES } from './utils/currencies';
 
 export default function App() {
   const [user, setUser] = useState(null);
+  const [currency, setCurrency] = useState(() => {
+    const saved = localStorage.getItem('smart_expense_currency');
+    if (saved) {
+      const parsed = CURRENCIES.find(c => c.code === saved);
+      if (parsed) return parsed;
+    }
+    return CURRENCIES[0]; // Default USD ($)
+  });
+
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState({});
   const [budgets, setBudgets] = useState([]);
@@ -31,6 +41,11 @@ export default function App() {
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [isCSVModalOpen, setIsCSVModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+
+  const handleCurrencyChange = (newCurrency) => {
+    setCurrency(newCurrency);
+    localStorage.setItem('smart_expense_currency', newCurrency.code);
+  };
 
   // Check current user session on mount
   useEffect(() => {
@@ -98,13 +113,13 @@ export default function App() {
       setEditingExpense(null);
       await fetchData();
     } catch (err) {
-      alert('Error saving expense: ' + err.message);
+      alert('Error saving transaction: ' + err.message);
     }
   };
 
   // Handle Delete Entry
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this expense entry?')) return;
+    if (!window.confirm('Are you sure you want to delete this transaction entry?')) return;
     try {
       await api.deleteExpense(id);
       await fetchData();
@@ -147,14 +162,14 @@ export default function App() {
 
   // Clear all data
   const handleClearData = async () => {
-    if (!window.confirm('Are you sure you want to clear recorded expenses?')) return;
+    if (!window.confirm('Are you sure you want to clear recorded entries?')) return;
     try {
       setLoading(true);
       await api.clearAll();
       setAiInsights(null);
       await fetchData();
     } catch (err) {
-      alert('Failed to clear expenses: ' + err.message);
+      alert('Failed to clear entries: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -175,6 +190,8 @@ export default function App() {
       {/* Header Navigation */}
       <Navbar 
         user={user}
+        currency={currency}
+        onCurrencyChange={handleCurrencyChange}
         onOpenAuthModal={() => setIsAuthModalOpen(true)}
         onLogout={handleLogout}
         onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
@@ -211,7 +228,8 @@ export default function App() {
         {/* Dashboard Top Summary Metrics & Budget Progress */}
         <SummaryCards 
           summary={summary} 
-          healthScore={aiInsights ? aiInsights.healthScore : null} 
+          healthScore={aiInsights ? aiInsights.healthScore : null}
+          currencySymbol={currency.symbol}
         />
 
         {/* AI Insights & Pattern Report Section */}
@@ -225,7 +243,7 @@ export default function App() {
         {/* Interactive Charts Dashboard */}
         <ChartsView expenses={expenses} />
 
-        {/* Expense Log Table */}
+        {/* Financial Transactions Log Table */}
         <ExpenseTable 
           expenses={expenses}
           onEdit={handleOpenEditModal}
@@ -234,6 +252,7 @@ export default function App() {
           onCategoryChange={setCategoryFilter}
           search={searchQuery}
           onSearchChange={setSearchQuery}
+          currencySymbol={currency.symbol}
         />
       </main>
 
@@ -243,6 +262,7 @@ export default function App() {
         onClose={() => setIsAddModalOpen(false)}
         onSubmit={handleFormSubmit}
         initialData={editingExpense}
+        currencySymbol={currency.symbol}
       />
 
       {/* Auth Modal */}
@@ -276,7 +296,7 @@ export default function App() {
         fontSize: '0.8rem',
         marginTop: 'auto'
       }}>
-        Smart Expense Tracker &bull; Built with ReactJS, Express, PostgreSQL, Google Gemini & Groq AI
+        Smart Expense AI &bull; Global Multi-Currency Financial Tracker & AI Insights Engine
       </footer>
     </div>
   );

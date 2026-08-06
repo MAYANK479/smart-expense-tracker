@@ -1,8 +1,11 @@
 import React from 'react';
-import { Wallet, Sparkles, Database, PlusCircle, RefreshCw, Trash2, User, LogOut, Target, FileSpreadsheet, LogIn } from 'lucide-react';
+import { Wallet, Sparkles, Database, PlusCircle, RefreshCw, Trash2, User, LogOut, Target, FileSpreadsheet, LogIn, Globe } from 'lucide-react';
+import { CURRENCIES } from '../utils/currencies';
 
 export default function Navbar({
   user,
+  currency,
+  onCurrencyChange,
   onOpenAuthModal,
   onLogout,
   onOpenBudgetModal,
@@ -58,17 +61,36 @@ export default function Navbar({
                 SmartExpense AI
               </h1>
               <span className="badge badge-indigo" style={{ fontSize: '0.7rem' }}>
-                <Sparkles size={12} /> Enterprise v2.5
+                <Sparkles size={12} /> Global AI v3.0
               </span>
             </div>
             <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-              Intelligent Financial Tracking & AI Pattern Analytics
+              AI Expense & Income Tracker • All Currencies Worldwide
             </p>
           </div>
         </div>
 
         {/* Database Status & Quick Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* Multi-Currency Selector */}
+          <div className="flex items-center gap-1 bg-slate-800/90 px-2.5 py-1 rounded-lg border border-slate-700/60 text-xs">
+            <Globe className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <select
+              value={currency.code}
+              onChange={(e) => {
+                const found = CURRENCIES.find(c => c.code === e.target.value);
+                if (found) onCurrencyChange(found);
+              }}
+              className="bg-transparent text-slate-200 border-none outline-none font-semibold text-xs cursor-pointer"
+            >
+              {CURRENCIES.map(c => (
+                <option key={c.code} value={c.code} style={{ background: '#0F172A', color: '#fff' }}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className={`badge ${isPostgresConnected ? 'badge-emerald' : 'badge-amber'}`} style={{ padding: '6px 10px', fontSize: '0.75rem' }}>
             <Database size={13} />
             {isPostgresConnected ? 'PostgreSQL Active' : 'Postgres Dialect / Local DB'}
@@ -141,7 +163,7 @@ export default function Navbar({
             className="glow-btn"
           >
             <PlusCircle size={16} />
-            Add Expense
+            Add Entry
           </button>
         </div>
       </div>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, PlusCircle, CheckCircle, Camera, Sparkles, Loader2, AlertCircle } from 'lucide-react';
+import { X, PlusCircle, CheckCircle, Camera, Sparkles, Loader2, AlertCircle, ArrowUpRight, TrendingDown } from 'lucide-react';
 import { api } from '../services/api';
 
-const CATEGORIES = [
+const EXPENSE_CATEGORIES = [
   'Food & Dining',
   'Transportation',
   'Utilities',
@@ -14,6 +14,14 @@ const CATEGORIES = [
   'Miscellaneous'
 ];
 
+const INCOME_CATEGORIES = [
+  'Salary & Earnings',
+  'Freelance & Business',
+  'Investments & Dividends',
+  'Gifts & Allowances',
+  'Other Income'
+];
+
 const PAYMENT_METHODS = [
   'Credit Card',
   'Debit Card',
@@ -22,8 +30,9 @@ const PAYMENT_METHODS = [
   'Bank Transfer'
 ];
 
-export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = null }) {
+export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = null, currencySymbol = '$' }) {
   const [formData, setFormData] = useState({
+    type: 'expense',
     title: '',
     amount: '',
     category: 'Food & Dining',
@@ -40,9 +49,10 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
   useEffect(() => {
     if (initialData) {
       setFormData({
+        type: initialData.type || 'expense',
         title: initialData.title || '',
         amount: initialData.amount !== undefined ? initialData.amount : '',
-        category: initialData.category || 'Food & Dining',
+        category: initialData.category || (initialData.type === 'income' ? 'Salary & Earnings' : 'Food & Dining'),
         date: initialData.date || new Date().toISOString().split('T')[0],
         payment_method: initialData.payment_method || 'Credit Card',
         notes: initialData.notes || '',
@@ -50,6 +60,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
       });
     } else {
       setFormData({
+        type: 'expense',
         title: '',
         amount: '',
         category: 'Food & Dining',
@@ -64,6 +75,16 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
   }, [initialData, isOpen]);
 
   if (!isOpen) return null;
+
+  const currentCategories = formData.type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
+
+  const handleTypeChange = (newType) => {
+    setFormData(prev => ({
+      ...prev,
+      type: newType,
+      category: newType === 'income' ? INCOME_CATEGORIES[0] : EXPENSE_CATEGORIES[0]
+    }));
+  };
 
   const handleReceiptUpload = (e) => {
     const file = e.target.files[0];
@@ -84,14 +105,15 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
           const { title, amount, category, date, payment_method, notes, extractionReasoning } = res.data;
           setFormData(prev => ({
             ...prev,
+            type: 'expense',
             title: title || prev.title,
             amount: amount ? amount.toString() : prev.amount,
-            category: CATEGORIES.includes(category) ? category : prev.category,
+            category: EXPENSE_CATEGORIES.includes(category) ? category : prev.category,
             date: date || prev.date,
             payment_method: PAYMENT_METHODS.includes(payment_method) ? payment_method : prev.payment_method,
             notes: notes || extractionReasoning || 'Scanned via AI Vision'
           }));
-          setScanMessage(`✨ Successfully extracted: ${title} ($${amount})`);
+          setScanMessage(`✨ Successfully extracted: ${title} (${currencySymbol}${amount})`);
         }
       } catch (err) {
         setScanning(false);
@@ -104,11 +126,11 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.title.trim()) {
-      setError('Please enter an expense title.');
+      setError('Please enter a title / merchant name.');
       return;
     }
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      setError('Please enter a valid expense amount greater than 0.');
+      setError('Please enter a valid positive amount.');
       return;
     }
 
@@ -144,10 +166,10 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
         position: 'relative'
       }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.25rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <PlusCircle size={20} color="#6366F1" />
-            {initialData ? 'Edit Expense Entry' : 'Expense Transaction Entry'}
+            {initialData ? 'Edit Transaction Entry' : 'Log New Transaction'}
           </h2>
           <button 
             onClick={onClose} 
@@ -157,8 +179,37 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
           </button>
         </div>
 
-        {/* AI RECEIPT OCR SCANNER DROPZONE */}
-        {!initialData && (
+        {/* TYPE TOGGLE: EXPENSE VS INCOME */}
+        <div className="grid grid-cols-2 gap-2 mb-4 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+          <button
+            type="button"
+            onClick={() => handleTypeChange('expense')}
+            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              formData.type === 'expense'
+                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <TrendingDown className="w-3.5 h-3.5" />
+            <span>Expense (Outflow)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleTypeChange('income')}
+            className={`py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+              formData.type === 'income'
+                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <ArrowUpRight className="w-3.5 h-3.5" />
+            <span>Income (Inflow)</span>
+          </button>
+        </div>
+
+        {/* AI RECEIPT OCR SCANNER DROPZONE (for expenses) */}
+        {!initialData && formData.type === 'expense' && (
           <div className="mb-4 bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-3.5 flex items-center justify-between text-xs text-indigo-200">
             <div className="flex items-center gap-2.5">
               <Camera className="w-4 h-4 text-indigo-400 shrink-0" />
@@ -194,11 +245,11 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
         <form onSubmit={handleSubmit}>
           {/* Title */}
           <div style={{ marginBottom: '16px' }}>
-            <label className="input-label">Expense Title / Merchant *</label>
+            <label className="input-label">{formData.type === 'income' ? 'Income Source / Title *' : 'Expense Title / Merchant *'}</label>
             <input 
               type="text"
               className="input-field"
-              placeholder="e.g. Whole Foods Market, Netflix, Uber"
+              placeholder={formData.type === 'income' ? 'e.g. Monthly Salary, Freelance Client, Dividend' : 'e.g. Whole Foods Market, Netflix, Uber'}
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
@@ -208,7 +259,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
           {/* Amount & Date Grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '16px' }}>
             <div>
-              <label className="input-label">Amount ($) *</label>
+              <label className="input-label">Amount ({currencySymbol}) *</label>
               <input 
                 type="number"
                 step="0.01"
@@ -242,7 +293,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
               >
-                {CATEGORIES.map(cat => (
+                {currentCategories.map(cat => (
                   <option key={cat} value={cat} style={{ background: '#0F172A', color: '#fff' }}>{cat}</option>
                 ))}
               </select>
@@ -268,7 +319,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
             <input 
               type="text"
               className="input-field"
-              placeholder="e.g. Weekly family dinner, Project subscription"
+              placeholder="e.g. Payroll direct deposit, Family groceries"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             />
@@ -300,7 +351,7 @@ export default function ExpenseForm({ isOpen, onClose, onSubmit, initialData = n
               className="glow-btn"
             >
               <CheckCircle size={16} />
-              {initialData ? 'Save Changes' : 'Save Expense'}
+              {initialData ? 'Save Changes' : 'Save Transaction'}
             </button>
           </div>
         </form>
