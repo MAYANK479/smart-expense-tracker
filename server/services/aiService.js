@@ -77,8 +77,37 @@ Provide your analysis strictly in JSON format matching this structure:
 Return ONLY valid JSON without markdown formatting or backticks.
 `;
 
-  // 1. Try Gemini API if GEMINI_API_KEY is available
-  if (process.env.GEMINI_API_KEY) {
+  // 1. Try Groq API if GROQ_API_KEY is available or if GEMINI_API_KEY starts with gsk_
+  const groqKey = process.env.GROQ_API_KEY || (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.startsWith('gsk_') ? process.env.GEMINI_API_KEY : null);
+  if (groqKey) {
+    try {
+      console.log('🤖 Invoking Groq Llama3 API for insights generation...');
+      const groqClient = new OpenAI({
+        apiKey: groqKey,
+        baseURL: 'https://api.groq.com/openai/v1'
+      });
+      const completion = await groqClient.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: 'You are a financial analysis assistant that outputs strictly valid JSON.' },
+          { role: 'user', content: prompt }
+        ],
+        response_format: { type: 'json_object' }
+      });
+      const parsed = JSON.parse(completion.choices[0].message.content);
+      return {
+        ...parsed,
+        totalSpent,
+        categoryBreakdown: categoryArray,
+        generatedBy: 'Groq AI (Llama 3.3 70B)'
+      };
+    } catch (err) {
+      console.warn('⚠️ Groq API execution failed:', err.message);
+    }
+  }
+
+  // 2. Try Gemini API if GEMINI_API_KEY is available (and not a gsk_ key)
+  if (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.startsWith('gsk_')) {
     try {
       console.log('🤖 Invoking Gemini API for insights generation...');
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
