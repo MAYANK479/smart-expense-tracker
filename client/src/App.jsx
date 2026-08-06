@@ -11,6 +11,7 @@ import BillScanner from './components/BillScanner';
 import AuthModal from './components/AuthModal';
 import BudgetModal from './components/BudgetModal';
 import CSVImportModal from './components/CSVImportModal';
+import SettingsModal from './components/SettingsModal';
 
 import { api } from './services/api';
 import { CURRENCIES } from './utils/currencies';
@@ -20,6 +21,7 @@ import Sidebar from './components/Sidebar';
 export default function App() {
   const [activeView, setActiveView] = useState('dashboard'); // 'landing' | 'dashboard'
   const [sidebarTab, setSidebarTab] = useState('dashboard');
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [user, setUser] = useState(null);
 
   const [currency, setCurrency] = useState(() => {
@@ -251,6 +253,7 @@ export default function App() {
             activeTab={sidebarTab}
             onTabChange={setSidebarTab}
             onOpenBudgetModal={() => setIsBudgetModalOpen(true)}
+            onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
             isPostgresConnected={summary.isPostgresConnected || false}
           />
 
@@ -346,6 +349,16 @@ export default function App() {
         isOpen={isCSVModalOpen}
         onClose={() => setIsCSVModalOpen(false)}
         onImportSuccess={fetchData}
+      />
+
+      {/* Global Preferences & Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        user={user}
+        currentCurrency={currency}
+        onCurrencyChange={handleCurrencyChange}
+        onClearData={handleClearData}
       />
 
       {/* Footer */}

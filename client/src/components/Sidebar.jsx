@@ -10,6 +10,7 @@ export default function Sidebar({
   activeTab = 'dashboard', // 'dashboard' | 'ai' | 'charts' | 'transactions' | 'budgets' | 'settings'
   onTabChange,
   onOpenBudgetModal,
+  onOpenSettingsModal,
   isPostgresConnected
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -20,6 +21,7 @@ export default function Sidebar({
     { id: 'charts', label: 'Visual Analytics', icon: PieChart, badge: null },
     { id: 'transactions', label: 'Transaction Log', icon: Receipt, badge: null },
     { id: 'budgets', label: 'Category Budgets', icon: Target, action: onOpenBudgetModal },
+    { id: 'settings', label: 'Preferences & Settings', icon: Settings, action: onOpenSettingsModal },
   ];
 
   return (
