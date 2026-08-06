@@ -108,24 +108,26 @@ Return ONLY valid JSON without markdown formatting or backticks.
 
   // 2. Try Gemini API if GEMINI_API_KEY is available (and not a gsk_ key)
   if (process.env.GEMINI_API_KEY && !process.env.GEMINI_API_KEY.startsWith('gsk_')) {
-    try {
-      console.log('🤖 Invoking Gemini API for insights generation...');
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-      const model = genAI.getGenerativeModel({ model: modelName });
-      
-      const response = await model.generateContent(prompt);
-      const responseText = response.response.text() || '';
-      const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
-      return {
-        ...parsed,
-        totalSpent,
-        categoryBreakdown: categoryArray,
-        generatedBy: `Google Gemini (${modelName})`
-      };
-    } catch (err) {
-      console.warn('⚠️ Gemini API execution failed or error parsing response:', err.message);
+    const candidateModels = [process.env.GEMINI_MODEL, 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-pro'].filter(Boolean);
+    for (const modelName of candidateModels) {
+      try {
+        console.log(`🤖 Invoking Gemini API (${modelName}) for insights generation...`);
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        
+        const response = await model.generateContent(prompt);
+        const responseText = response.response.text() || '';
+        const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+        return {
+          ...parsed,
+          totalSpent,
+          categoryBreakdown: categoryArray,
+          generatedBy: `Google Gemini (${modelName})`
+        };
+      } catch (err) {
+        console.warn(`⚠️ Gemini API model ${modelName} failed, attempting next model fallback:`, err.message);
+      }
     }
   }
 
