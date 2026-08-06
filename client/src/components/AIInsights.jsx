@@ -1,14 +1,27 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { 
   Sparkles, BrainCircuit, AlertTriangle, TrendingDown, 
-  Lightbulb, ShieldCheck, Download, Copy, Check, ChevronRight 
+  Lightbulb, ShieldCheck, Copy, Check, MessageSquare, Bot, ArrowRight, Zap 
 } from 'lucide-react';
+import Card from './ui/Card';
+import Button from './ui/Button';
+import Badge from './ui/Badge';
 
 export default function AIInsights({ onGenerate, insights = null, loading = false, error = '' }) {
   const [copied, setCopied] = useState(false);
+  const [activePrompt, setActivePrompt] = useState(null);
 
-  const handleGenerateClick = async () => {
+  const samplePrompts = [
+    '💸 How much did I spend this month?',
+    '📊 Where am I overspending?',
+    '🍕 Compare food vs transportation outlay',
+    '🐖 Am I saving enough for my targets?'
+  ];
+
+  const handleGenerateClick = async (promptText) => {
+    if (promptText) setActivePrompt(promptText);
     await onGenerate();
     confetti({
       particleCount: 50,
@@ -43,253 +56,198 @@ ${insights.suggestions?.map(s => `- ${s.title}: ${s.description} (Savings: ${s.p
   };
 
   return (
-    <div className="glass-card animate-fade-in" style={{
-      padding: '28px',
-      marginBottom: '24px',
-      background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 27, 75, 0.6))',
-      border: '1px solid rgba(139, 92, 246, 0.3)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
-      {/* Decorative background glow */}
-      <div style={{
-        position: 'absolute',
-        top: '-40px',
-        right: '-40px',
-        width: '180px',
-        height: '180px',
-        background: 'radial-gradient(circle, rgba(139, 92, 246, 0.25) 0%, transparent 70%)',
-        pointerEvents: 'none'
-      }} />
+    <Card padding="p-8" className="mb-8 relative overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950/40 to-slate-950 border-purple-500/30 shadow-2xl">
+      
+      {/* Decorative Glow Orb Background */}
+      <div className="absolute top-0 right-0 w-80 h-80 bg-purple-600/15 blur-[100px] rounded-full pointer-events-none -z-10" />
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              padding: '8px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #8B5CF6, #EC4899)',
-              color: '#fff',
-              display: 'flex'
-            }}>
-              <BrainCircuit size={22} />
-            </div>
-            <div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', color: '#ffffff' }}>
-                AI Expense Pattern & Insight Engine
+      {/* CENTERPIECE HEADER */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6 pb-6 border-b border-slate-800/80">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30">
+            <BrainCircuit className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl md:text-2xl font-extrabold text-white tracking-tight">
+                AI Finance Assistant & Pattern Engine
               </h2>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                Powered by Gemini & OpenAI deep pattern analysis
-              </p>
+              <Badge variant="purple" size="sm">
+                <Sparkles className="w-3 h-3 text-purple-400" /> Gemini 2.5 + Llama-3
+              </Badge>
             </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Deep transaction categorization, cashflow anomaly detection, and automated savings recommendations
+            </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="flex items-center gap-3">
           {insights && (
-            <button 
-              onClick={handleCopyReport} 
-              className="glow-btn glow-btn-secondary"
-              title="Copy formatted markdown report"
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={handleCopyReport}
+              icon={copied ? Check : Copy}
             >
-              {copied ? <Check size={15} color="#10B981" /> : <Copy size={15} />}
-              {copied ? 'Copied!' : 'Copy Report'}
-            </button>
+              {copied ? 'Copied Markdown' : 'Copy Report'}
+            </Button>
           )}
 
-          <button 
-            onClick={handleGenerateClick}
-            disabled={loading}
-            className="glow-btn"
-            style={{ background: 'linear-gradient(135deg, #8B5CF6, #6366F1)' }}
+          <Button
+            size="md"
+            variant="primary"
+            onClick={() => handleGenerateClick(null)}
+            isLoading={loading}
+            icon={Sparkles}
           >
-            <Sparkles size={16} className={loading ? 'pulse-glow' : ''} />
-            {loading ? 'Analyzing Entries...' : (insights ? 'Re-Generate Insights' : 'Analyze Expenses with AI')}
-          </button>
+            {loading ? 'Analyzing Transactions...' : (insights ? 'Re-Generate Report' : 'Analyze Expenses with AI')}
+          </Button>
+        </div>
+      </div>
+
+      {/* SAMPLE PROMPT QUICK LAUNCH PILLS */}
+      <div className="mb-6 bg-slate-900/80 p-4 rounded-2xl border border-slate-800 space-y-2">
+        <span className="text-[11px] font-semibold text-purple-400 uppercase tracking-widest flex items-center gap-1.5">
+          <MessageSquare className="w-3.5 h-3.5" /> Interactive Quick Prompts
+        </span>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {samplePrompts.map((prompt, idx) => (
+            <button
+              key={idx}
+              onClick={() => handleGenerateClick(prompt)}
+              disabled={loading}
+              className="bg-slate-800/80 hover:bg-purple-900/40 text-slate-300 hover:text-purple-200 px-3 py-1.5 rounded-xl border border-slate-700/60 hover:border-purple-500/40 font-medium transition-all cursor-pointer text-xs"
+            >
+              {prompt}
+            </button>
+          ))}
         </div>
       </div>
 
       {error && (
-        <div style={{
-          background: 'rgba(244, 63, 94, 0.15)',
-          border: '1px solid rgba(244, 63, 94, 0.4)',
-          color: '#fda4af',
-          padding: '12px 16px',
-          borderRadius: '10px',
-          fontSize: '0.85rem',
-          marginBottom: '20px'
-        }}>
+        <div className="bg-rose-500/10 border border-rose-500/30 p-4 rounded-2xl text-xs text-rose-300 mb-6">
           {error}
         </div>
       )}
 
-      {/* Initial state if no report generated yet */}
+      {/* INITIAL EMPTY STATE */}
       {!insights && !loading && (
-        <div style={{
-          background: 'rgba(15, 23, 42, 0.5)',
-          border: '1px dashed rgba(255, 255, 255, 0.12)',
-          borderRadius: '14px',
-          padding: '32px',
-          textAlign: 'center'
-        }}>
-          <BrainCircuit size={42} color="#8B5CF6" style={{ marginBottom: '12px', opacity: 0.8 }} />
-          <h3 style={{ color: '#ffffff', fontSize: '1.05rem', marginBottom: '6px' }}>
-            Ready to unlock spending insights?
-          </h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '500px', margin: '0 auto 16px auto' }}>
-            Click the button above to aggregate all logged expense entries and send them to the AI engine. You'll receive category breakdown analysis, anomaly alerts, and tailored savings tips.
+        <div className="bg-slate-900/40 border border-dashed border-slate-800 rounded-2xl p-8 text-center space-y-3">
+          <Bot className="w-12 h-12 text-purple-400 mx-auto opacity-70" />
+          <h3 className="text-base font-bold text-white">Ready to unlock spending insights?</h3>
+          <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+            Click any prompt above or click <strong>Analyze Expenses with AI</strong> to generate financial health scores, detect outlay spikes, and uncover monthly savings opportunities.
           </p>
         </div>
       )}
 
-      {/* Loading state skeleton */}
+      {/* LOADING PULSE STATE */}
       {loading && (
-        <div style={{ padding: '30px', textAlign: 'center' }}>
-          <div className="pulse-glow" style={{ fontSize: '1rem', color: '#a5b4fc', marginBottom: '8px', fontWeight: 600 }}>
-            🧠 Aggregating transaction logs & contacting AI engine...
+        <div className="py-12 text-center space-y-3">
+          <div className="animate-pulse-glow text-sm text-purple-300 font-bold flex items-center justify-center gap-2">
+            <Sparkles className="w-4 h-4 text-purple-400 animate-spin" />
+            <span>Aggregating transaction logs & querying AI Engine...</span>
           </div>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Examining recurring charges, category weights, and savings opportunities
-          </p>
+          <p className="text-xs text-slate-400">Evaluating category weights, credit card ratios, and savings recommendations</p>
         </div>
       )}
 
-      {/* Report display */}
+      {/* REPORT DISPLAY */}
       {insights && !loading && (
-        <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Executive Summary Card */}
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            padding: '20px',
-            borderRadius: '14px',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '16px',
-            flexWrap: 'wrap'
-          }}>
-            <div style={{ flex: 1, minWidth: '260px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <span className="badge badge-indigo">
-                  Generated by {insights.generatedBy}
-                </span>
-              </div>
-              <p style={{ fontSize: '0.95rem', color: '#e2e8f0', lineHeight: 1.5 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          {/* Executive Summary & Health Score */}
+          <div className="bg-slate-900/90 border border-slate-800 p-6 rounded-2xl flex flex-col md:flex-row items-start justify-between gap-6">
+            <div className="space-y-2 flex-1">
+              <Badge variant="indigo" size="sm">
+                Generated by {insights.generatedBy || 'Gemini AI'}
+              </Badge>
+              <p className="text-sm text-slate-200 leading-relaxed">
                 {insights.summary}
               </p>
             </div>
 
             {insights.healthScore !== undefined && (
-              <div style={{
-                background: 'rgba(15, 23, 42, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '12px',
-                padding: '14px 20px',
-                textAlign: 'center',
-                minWidth: '130px'
-              }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>
-                  Financial Health
-                </div>
-                <div style={{
-                  fontSize: '1.8rem',
-                  fontWeight: 800,
-                  fontFamily: 'var(--font-heading)',
-                  color: insights.healthScore >= 75 ? '#10B981' : insights.healthScore >= 50 ? '#F59E0B' : '#F43F5E'
-                }}>
-                  {insights.healthScore}
-                  <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>/100</span>
+              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center min-w-[140px] shrink-0">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Health Rating</span>
+                <div className={`text-3xl font-black font-heading mt-1 ${insights.healthScore >= 75 ? 'text-emerald-400' : insights.healthScore >= 50 ? 'text-amber-400' : 'text-rose-400'}`}>
+                  {insights.healthScore}<span className="text-xs text-slate-500 font-normal">/100</span>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Grid of Patterns, Anomalies, and Suggestions */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: '18px'
-          }}>
+          {/* Grid of Patterns, Anomalies & Suggestions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
             {/* Patterns */}
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(99, 102, 241, 0.2)',
-              borderRadius: '14px',
-              padding: '18px'
-            }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                <TrendingDown size={16} />
-                Observed Spending Patterns
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="bg-slate-900/60 p-5 rounded-2xl border border-indigo-500/20 space-y-4">
+              <div className="flex items-center gap-2 font-bold text-sm text-indigo-300">
+                <TrendingDown className="w-4 h-4" />
+                <span>Observed Patterns</span>
+              </div>
+              <div className="space-y-3 text-xs">
                 {insights.patterns?.map((item, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #6366F1' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ffffff' }}>{item.title}</span>
-                      <span className={`badge ${item.impact === 'High' ? 'badge-rose' : item.impact === 'Medium' ? 'badge-amber' : 'badge-indigo'}`}>
-                        {item.impact || 'Pattern'}
-                      </span>
+                  <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-800/80 border-l-2 border-l-indigo-500 space-y-1">
+                    <div className="flex justify-between items-center font-bold text-slate-200">
+                      <span>{item.title}</span>
+                      <Badge variant={item.impact === 'High' ? 'rose' : item.impact === 'Medium' ? 'amber' : 'indigo'} size="sm">
+                        {item.impact || 'Info'}
+                      </Badge>
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.description}</p>
+                    <p className="text-slate-400">{item.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Anomalies & Spikes */}
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(244, 63, 94, 0.2)',
-              borderRadius: '14px',
-              padding: '18px'
-            }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#fda4af', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                <AlertTriangle size={16} />
-                Anomalies & High Outliers
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Anomalies */}
+            <div className="bg-slate-900/60 p-5 rounded-2xl border border-rose-500/20 space-y-4">
+              <div className="flex items-center gap-2 font-bold text-sm text-rose-300">
+                <AlertTriangle className="w-4 h-4" />
+                <span>High Outliers & Spikes</span>
+              </div>
+              <div className="space-y-3 text-xs">
                 {insights.anomalies?.map((item, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #F43F5E' }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ffffff', marginBottom: '4px' }}>
-                      {item.title}
-                    </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.description}</p>
+                  <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-800/80 border-l-2 border-l-rose-500 space-y-1">
+                    <span className="font-bold text-slate-200 block">{item.title}</span>
+                    <p className="text-slate-400">{item.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Suggestions & Savings Tips */}
-            <div style={{
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(16, 185, 129, 0.2)',
-              borderRadius: '14px',
-              padding: '18px'
-            }}>
-              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#6ee7b7', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                <Lightbulb size={16} />
-                Actionable Savings Opportunities
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Savings Tips */}
+            <div className="bg-slate-900/60 p-5 rounded-2xl border border-emerald-500/20 space-y-4">
+              <div className="flex items-center gap-2 font-bold text-sm text-emerald-300">
+                <Lightbulb className="w-4 h-4" />
+                <span>Savings Opportunities</span>
+              </div>
+              <div className="space-y-3 text-xs">
                 {insights.suggestions?.map((item, idx) => (
-                  <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #10B981' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ffffff' }}>{item.title}</span>
+                  <div key={idx} className="bg-slate-950 p-3 rounded-xl border border-slate-800/80 border-l-2 border-l-emerald-500 space-y-1">
+                    <div className="flex justify-between items-center font-bold text-slate-200">
+                      <span>{item.title}</span>
                       {item.potentialSavings && (
-                        <span className="badge badge-emerald">
+                        <Badge variant="emerald" size="sm">
                           {item.potentialSavings}
-                        </span>
+                        </Badge>
                       )}
                     </div>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{item.description}</p>
+                    <p className="text-slate-400">{item.description}</p>
                   </div>
                 ))}
               </div>
             </div>
+
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+
+    </Card>
   );
 }
