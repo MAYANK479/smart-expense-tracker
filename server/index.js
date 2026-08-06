@@ -23,16 +23,19 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Security & Headers Middleware
-app.use(helmet({
-  contentSecurityPolicy: false, // Allowed for embedded SPA assets
-  crossOriginEmbedderPolicy: false
-}));
-
+// Enable CORS for all routes and preflight requests
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+}));
+app.options('*', cors());
+
+// Security & Headers Middleware
+app.use(helmet({
+  contentSecurityPolicy: false, // Allowed for embedded SPA assets
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: false
 }));
 
 app.use(express.json({ limit: '10mb' }));
