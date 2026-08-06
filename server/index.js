@@ -52,7 +52,7 @@ app.get('*', (req, res) => {
 });
 
 // Start Production Server
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`🚀 Production Server running on http://127.0.0.1:${PORT}`);
-  console.log(`📱 React Frontend UI served directly at http://127.0.0.1:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`🚀 Production Server running on port ${PORT}`);
+  console.log(`📱 React Frontend UI served directly at http://localhost:${PORT}`);
 });

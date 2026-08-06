@@ -23,15 +23,21 @@ let pool = null;
 
 if (process.env.DATABASE_URL || process.env.PGHOST || process.env.PGUSER) {
   try {
-    pool = new Pool({
+    const poolConfig = {
       connectionString: process.env.DATABASE_URL,
       host: process.env.PGHOST || 'localhost',
       port: process.env.PGPORT || 5432,
       database: process.env.PGDATABASE || 'expense_tracker',
       user: process.env.PGUSER || 'postgres',
       password: process.env.PGPASSWORD || '',
-      connectionTimeoutMillis: 3000
-    });
+      connectionTimeoutMillis: 5000
+    };
+
+    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost') && !process.env.DATABASE_URL.includes('127.0.0.1')) {
+      poolConfig.ssl = { rejectUnauthorized: false };
+    }
+
+    pool = new Pool(poolConfig);
 
     // Test connection
     pool.query('SELECT 1', (err) => {
