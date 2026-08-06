@@ -1,13 +1,9 @@
 import React from 'react';
-import { Sparkles, Database, PlusCircle, RefreshCw, Trash2, Home, LayoutDashboard, Globe } from 'lucide-react';
+import { Sparkles, PlusCircle, Home, LayoutDashboard, Globe } from 'lucide-react';
 import { CURRENCIES } from '../utils/currencies';
 
 export default function Navbar({ 
   onOpenAddModal, 
-  onSeedData, 
-  onClearData, 
-  isPostgresConnected, 
-  loading,
   currentCurrency,
   onCurrencyChange,
   activeView,
@@ -17,80 +13,179 @@ export default function Navbar({
   onLogout
 }) {
   return (
-    <header className="bg-white border-b border-purple-100 sticky top-0 z-50 px-6 py-3.5 shadow-sm">
-      <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
+    <header style={{
+      background: '#ffffff',
+      borderBottom: '1px solid #e9d5ff',
+      position: 'sticky',
+      top: 0,
+      zIndex: 50,
+      padding: '12px 24px',
+      boxShadow: '0 1px 4px rgba(126, 34, 206, 0.06)'
+    }}>
+      <div style={{
+        maxWidth: '1280px',
+        margin: '0 auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
         
-        {/* Brand Logo & Name */}
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => onViewChange('landing')}>
-          <div className="w-10 h-10 rounded-xl bg-[#7e22ce] text-white flex items-center justify-center shadow-md shadow-purple-200">
+        {/* Brand Logo & Title */}
+        <div 
+          onClick={() => onViewChange('landing')}
+          style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
+        >
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '12px',
+            background: '#7e22ce',
+            color: '#ffffff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(126, 34, 206, 0.25)'
+          }}>
             <Sparkles size={20} />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-extrabold text-lg text-slate-900 tracking-tight">
-                Smart Expense Tracker
-              </h1>
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium">
+            <h1 style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: '1.2rem',
+              fontWeight: 800,
+              color: '#0f172a',
+              letterSpacing: '-0.02em',
+              lineHeight: '1.2'
+            }}>
+              Smart Expense Tracker
+            </h1>
+            <p style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 500 }}>
               Free AI-Powered Expense & Cashflow Tracker
             </p>
           </div>
         </div>
 
         {/* Center Navigation Links (Matching smartexpenseai.com) */}
-        <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600">
-          <button onClick={() => onViewChange('landing')} className={`hover:text-[#7e22ce] transition-colors ${activeView === 'landing' ? 'text-[#7e22ce] font-bold' : ''}`}>
+        <nav style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          fontSize: '0.82rem',
+          fontWeight: 600
+        }}>
+          <button 
+            onClick={() => onViewChange('landing')}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: activeView === 'landing' ? '#7e22ce' : '#475569',
+              fontWeight: activeView === 'landing' ? 700 : 600,
+              cursor: 'pointer'
+            }}
+          >
             Features
           </button>
-          <button onClick={() => onViewChange('landing')} className="hover:text-[#7e22ce] transition-colors">
+          <button 
+            onClick={() => onViewChange('landing')}
+            style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}
+          >
             Blog
           </button>
-          <button onClick={() => onViewChange('landing')} className="hover:text-[#7e22ce] transition-colors">
+          <button 
+            onClick={() => onViewChange('landing')}
+            style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}
+          >
             Pricing
           </button>
-          <button onClick={() => onViewChange('landing')} className="hover:text-[#7e22ce] transition-colors">
+          <button 
+            onClick={() => onViewChange('landing')}
+            style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer' }}
+          >
             About
           </button>
         </nav>
 
         {/* Right Action Controls */}
-        <div className="flex items-center gap-3 flex-wrap">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           
           {/* View Toggle */}
-          <div className="bg-slate-100 p-1 rounded-xl flex gap-1 border border-slate-200 text-xs">
+          <div style={{
+            background: '#f1f5f9',
+            padding: '3px',
+            borderRadius: '12px',
+            display: 'flex',
+            gap: '4px',
+            border: '1px solid #e2e8f0'
+          }}>
             <button
               onClick={() => onViewChange('landing')}
-              className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all ${
-                activeView === 'landing' 
-                  ? 'bg-white text-[#7e22ce] shadow-xs' 
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              style={{
+                background: activeView === 'landing' ? '#ffffff' : 'transparent',
+                color: activeView === 'landing' ? '#7e22ce' : '#475569',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: activeView === 'landing' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none'
+              }}
             >
               <Home size={13} /> Landing
             </button>
 
             <button
               onClick={() => onViewChange('dashboard')}
-              className={`px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 transition-all ${
-                activeView === 'dashboard' 
-                  ? 'bg-[#7e22ce] text-white shadow-sm' 
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              style={{
+                background: activeView === 'dashboard' ? '#7e22ce' : 'transparent',
+                color: activeView === 'dashboard' ? '#ffffff' : '#475569',
+                border: 'none',
+                padding: '6px 12px',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: activeView === 'dashboard' ? '0 2px 6px rgba(126,34,206,0.3)' : 'none'
+              }}
             >
               <LayoutDashboard size={13} /> App Dashboard
             </button>
           </div>
 
           {/* Currency Switcher */}
-          <div className="flex items-center gap-1 bg-purple-50 hover:bg-purple-100/70 px-2.5 py-1.5 rounded-xl border border-purple-200 text-xs text-purple-900 font-semibold transition-colors">
-            <Globe className="w-3.5 h-3.5 text-purple-700 shrink-0" />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: '#f3e8ff',
+            padding: '6px 12px',
+            borderRadius: '12px',
+            border: '1px solid #e9d5ff'
+          }}>
+            <Globe size={14} color="#7e22ce" />
             <select
               value={currentCurrency ? currentCurrency.code : 'USD'}
               onChange={(e) => {
                 const found = CURRENCIES.find(c => c.code === e.target.value);
                 if (found) onCurrencyChange(found);
               }}
-              className="bg-transparent border-none outline-none text-xs font-bold cursor-pointer text-purple-900"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                color: '#6b21a8',
+                cursor: 'pointer'
+              }}
             >
               {CURRENCIES.map(c => (
                 <option key={c.code} value={c.code} style={{ background: '#ffffff', color: '#1e1b4b' }}>
@@ -104,24 +199,55 @@ export default function Navbar({
           {user ? (
             <button
               onClick={onLogout}
-              className="border border-purple-300 text-[#7e22ce] hover:bg-purple-50 font-bold text-xs px-3.5 py-2 rounded-xl transition-all"
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e9d5ff',
+                color: '#7e22ce',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                padding: '7px 14px',
+                borderRadius: '10px',
+                cursor: 'pointer'
+              }}
             >
               Sign Out ({user.name})
             </button>
           ) : (
             <button
               onClick={onOpenAuthModal}
-              className="border border-[#7e22ce] text-[#7e22ce] hover:bg-purple-50 font-bold text-xs px-4 py-2 rounded-xl transition-all"
+              style={{
+                background: '#ffffff',
+                border: '1.5px solid #7e22ce',
+                color: '#7e22ce',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                padding: '7px 16px',
+                borderRadius: '10px',
+                cursor: 'pointer'
+              }}
             >
               Sign In
             </button>
           )}
 
-          {/* Dashboard specific buttons */}
+          {/* Dashboard Add Transaction Button */}
           {activeView === 'dashboard' && (
             <button
               onClick={onOpenAddModal}
-              className="bg-[#7e22ce] hover:bg-[#6b21a8] text-white font-bold text-xs px-4 py-2 rounded-xl flex items-center gap-1.5 shadow-md shadow-purple-200 transition-all"
+              style={{
+                background: '#7e22ce',
+                color: '#ffffff',
+                border: 'none',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+                padding: '7px 16px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 3px 10px rgba(126, 34, 206, 0.3)'
+              }}
             >
               <PlusCircle size={14} /> Add Transaction
             </button>
